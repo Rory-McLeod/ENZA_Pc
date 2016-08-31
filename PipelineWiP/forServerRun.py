@@ -1,12 +1,14 @@
 #!/usr/bin/env python
-
+"""
+Todo:
+- remove execute from classes and pass to Main class
+"""
 #python forServerRun.py -Q AD84_S8_L001_R1_001P100.fastq -Q AD84_S8_L001_R2_001P100.fastq -g Phyca11_unmasked_genomic_scaffolds.fasta
 
 import optparse
-from Visualiser import VisualisationTools
-from Main import Main
-from ReadAligner import ReadAligner
-
+from VisualisationTools import VisualisationTools
+import Main
+import ReadAligner
 
 fastQFileList = []
 refGenomeList = []
@@ -89,7 +91,7 @@ for bamWorker in worker.bamClass:
     bamWorker.join()
 
 for bamWorker in worker.bamClass:
-    visualisationTool = VisualisationTools.VisualisationTools(bamWorker.samFile, options.result_filepath)
+    visualisationTool = VisualisationTools(bamWorker.samFile, options.result_filepath)
     visualisationTool.start()
 
 

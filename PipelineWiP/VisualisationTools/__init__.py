@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 
+"""
+Created on: August 2016
+:author: H.J.C. Cornelisse
+"""
 from __future__ import division
 import threading
 
 class VisualisationTools(threading.Thread):
+    """
+    Currently, this module is not yet implemented in the whole system due to testing
+    Used to generate plots and statistics regarding the outcomes of the other modules
+    """
 
     inputDir = ""
     outputDir = ""
@@ -13,12 +21,23 @@ class VisualisationTools(threading.Thread):
     totalSize = 0
 
     def __init__(self, inputDir, outputDir):
+        """
+        Method for initiating the visualisation tool.
+        threading.Thread is called for threaded use of this class
+        :param inputDir: the location of the output of divers systems (default: workDir)
+        :param outputDir: the location to save the output of these methods to (default: resultDir)
+        """
         threading.Thread.__init__(self)
         self.inputDir = inputDir
         self.outputDir = outputDir
         return
 
     def run(self):
+        """
+        Method called upon by start(), specific for threated runs.
+        Please call upon this after finishing the mapping and transfer in ReadAligner
+        :returns: None (Null): returns to the place of calling
+        """
         self.readBedToLocal()
         # self.readCovBedtoLocal()
         # oneDepth = self.getCoveragePercentage()
@@ -35,6 +54,11 @@ class VisualisationTools(threading.Thread):
         return
 
     def readBedToLocal(self):
+        """
+        Reads the BED file into the memory for fast access.
+        The BED file here is a BED file giving read depth per position
+        Returns:
+        """
         bedFile = file(self.inputDir+".bed", mode='r')
         bedList = {}
         scaffoldList = []
@@ -54,6 +78,11 @@ class VisualisationTools(threading.Thread):
         return
 
     def readCovBedtoLocal(self):
+        """
+        Reads the occurance of a read depth over the whole genome.
+        Returns:
+        None (Null): returns to the place of calling
+        """
         covFile = file(self.inputDir + ".CovBed", mode='r')
         self.depthOccurance = {}
         for line in covFile:
@@ -67,6 +96,12 @@ class VisualisationTools(threading.Thread):
         return
 
     def saveAsCSV(self):
+        """
+        Saves the information from the BED depth per position to a CSV file for visualisation
+        important: whole genome is big! think before visualising!
+        Returns:
+        None (Null): returns to the place of calling
+        """
         for key, value in self.depthPerPos.iteritems():
             i = 1
             outputFile = file(self.outputDir + "/" + key + ".csv", mode='w')
@@ -78,6 +113,13 @@ class VisualisationTools(threading.Thread):
         return
 
     def getCoveragePercentage(self, depth=1):
+        """
+        Returns the percentage of coverage over the whole genome by an set read depth
+        Input:
+        depth (int): depth that you want to get the coverage rate from
+        Returns:
+        percentageMore (float): the percentage of coverage at the given depth
+        """
         lessVal = 0
         for key, value in self.depthOccurance.iteritems():
             key = int(key)

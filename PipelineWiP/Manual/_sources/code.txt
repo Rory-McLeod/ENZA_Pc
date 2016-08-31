@@ -1,0 +1,17 @@
+Auto Generated Documentation
+============================
+.. todo:: testing of class VisualisationTools. local test worked before
+.. todolist::
+
+.. automodule:: VisualisationTools
+    :members:
+
+.. automodule:: PrimerDesign
+    :members:
+
+.. automodule:: Main
+    :members:
+
+.. automodule:: ReadAligner
+    :members:
+

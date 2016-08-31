@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Auto Generated Documentation &#8212; Pipeline ENZA zaden 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Pipeline ENZA zaden 0.1 documentation" href="forServerRun.html" />
+    <link rel="prev" title="Welcome to Pipeline ENZA zaden’s documentation!" href="forServerRun.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="forServerRun.html" title="Welcome to Pipeline ENZA zaden’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="forServerRun.html">Pipeline ENZA zaden 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="auto-generated-documentation">
+<h1>Auto Generated Documentation<a class="headerlink" href="#auto-generated-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">testing of class VisualisationTools. local test worked before</p>
+</div>
+<div class="admonition-todo admonition">
+<p class="first admonition-title">Todo</p>
+<p class="last">testing of class VisualisationTools. local test worked before</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#index-0"><em>original entry</em></a> is located in Y:\GitHub\ENZA_Pc\PipelineWiP\source\code.rst, line 3.)</p>
+<span class="target" id="module-VisualisationTools"></span><p>Created on: August 2016
+:author: H.J.C. Cornelisse</p>
+<dl class="class">
+<dt id="VisualisationTools.VisualisationTools">
+<em class="property">class </em><code class="descclassname">VisualisationTools.</code><code class="descname">VisualisationTools</code><span class="sig-paren">(</span><em>inputDir</em>, <em>outputDir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/VisualisationTools.html#VisualisationTools"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#VisualisationTools.VisualisationTools" title="Permalink to this definition">¶</a></dt>
+<dd><p>Currently, this module is not yet implemented in the whole system due to testing
+Used to generate plots and statistics regarding the outcomes of the other modules</p>
+<dl class="method">
+<dt id="VisualisationTools.VisualisationTools.getCoveragePercentage">
+<code class="descname">getCoveragePercentage</code><span class="sig-paren">(</span><em>depth=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/VisualisationTools.html#VisualisationTools.getCoveragePercentage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#VisualisationTools.VisualisationTools.getCoveragePercentage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the percentage of coverage over the whole genome by an set read depth
+Input:
+depth (int): depth that you want to get the coverage rate from
+Returns:
+percentageMore (float): the percentage of coverage at the given depth</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="VisualisationTools.VisualisationTools.readBedToLocal">
+<code class="descname">readBedToLocal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/VisualisationTools.html#VisualisationTools.readBedToLocal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#VisualisationTools.VisualisationTools.readBedToLocal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the BED file into the memory for fast access.
+The BED file here is a BED file giving read depth per position
+Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="VisualisationTools.VisualisationTools.readCovBedtoLocal">
+<code class="descname">readCovBedtoLocal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/VisualisationTools.html#VisualisationTools.readCovBedtoLocal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#VisualisationTools.VisualisationTools.readCovBedtoLocal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads the occurance of a read depth over the whole genome.
+Returns:
+None (Null): returns to the place of calling</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="VisualisationTools.VisualisationTools.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/VisualisationTools.html#VisualisationTools.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#VisualisationTools.VisualisationTools.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method called upon by start(), specific for threated runs.
+Please call upon this after finishing the mapping and transfer in ReadAligner
+:returns: None (Null): returns to the place of calling</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="VisualisationTools.VisualisationTools.saveAsCSV">
+<code class="descname">saveAsCSV</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/VisualisationTools.html#VisualisationTools.saveAsCSV"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#VisualisationTools.VisualisationTools.saveAsCSV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the information from the BED depth per position to a CSV file for visualisation
+important: whole genome is big! think before visualising!
+Returns:
+None (Null): returns to the place of calling</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-PrimerDesign"></span><p>Created on: 29-08-2016
+&#64;author: H.J.C. Cornelisse
+Class is used to generate points of interessed from the mapped reads.
+Todo:
+- Testing POI generation (currently not used in this forServerRun.py)
+- Check the generated POI, are they covered in all three reads?</p>
+<span class="target" id="module-Main"></span><p>Created on: 29-08-2016
+&#64;author: H.J.C. Cornelisse
+Class is used to do main functions like checking the inputs and creating directories
+Todo:
+- add excecute for common use</p>
+<span class="target" id="module-ReadAligner"></span><p>Created on: 29-08-2016
+&#64;author: H.J.C. Cornelisse
+Class is used to map the reads against the reference genome.
+Todo:
+- Write unit testing
+- Write BWA aligner</p>
+<dl class="class">
+<dt id="ReadAligner.BWA">
+<em class="property">class </em><code class="descclassname">ReadAligner.</code><code class="descname">BWA</code><a class="reference internal" href="_modules/ReadAligner.html#BWA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ReadAligner.BWA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Todo: work in progress</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="forServerRun.html"
+                        title="previous chapter">Welcome to Pipeline ENZA zaden&#8217;s documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/code.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="forServerRun.html" title="Welcome to Pipeline ENZA zaden’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="forServerRun.html">Pipeline ENZA zaden 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, H.J.C. Cornelisse.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>VisualisationTools &#8212; Pipeline ENZA zaden 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Pipeline ENZA zaden 0.1 documentation" href="../forServerRun.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../forServerRun.html">Pipeline ENZA zaden 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for VisualisationTools</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on: August 2016</span>
+<span class="sd">:author: H.J.C. Cornelisse</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+
+<div class="viewcode-block" id="VisualisationTools"><a class="viewcode-back" href="../code.html#VisualisationTools.VisualisationTools">[docs]</a><span class="k">class</span> <span class="nc">VisualisationTools</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Currently, this module is not yet implemented in the whole system due to testing</span>
+<span class="sd">    Used to generate plots and statistics regarding the outcomes of the other modules</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">inputDir</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">outputDir</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">depthOccurance</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">depthPerPos</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">allList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">totalSize</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputDir</span><span class="p">,</span> <span class="n">outputDir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method for initiating the visualisation tool.</span>
+<span class="sd">        threading.Thread is called for threaded use of this class</span>
+<span class="sd">        :param inputDir: the location of the output of divers systems (default: workDir)</span>
+<span class="sd">        :param outputDir: the location to save the output of these methods to (default: resultDir)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputDir</span> <span class="o">=</span> <span class="n">inputDir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span> <span class="o">=</span> <span class="n">outputDir</span>
+        <span class="k">return</span>
+
+<div class="viewcode-block" id="VisualisationTools.run"><a class="viewcode-back" href="../code.html#VisualisationTools.VisualisationTools.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method called upon by start(), specific for threated runs.</span>
+<span class="sd">        Please call upon this after finishing the mapping and transfer in ReadAligner</span>
+<span class="sd">        :returns: None (Null): returns to the place of calling</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readBedToLocal</span><span class="p">()</span>
+        <span class="c1"># self.readCovBedtoLocal()</span>
+        <span class="c1"># oneDepth = self.getCoveragePercentage()</span>
+        <span class="c1"># fiveDepth = self.getCoveragePercentage(5)</span>
+        <span class="c1"># tenDepth = self.getCoveragePercentage(10)</span>
+        <span class="c1"># fifteenDepth = self.getCoveragePercentage(15)</span>
+        <span class="c1"># twentyDepth = self.getCoveragePercentage(20)</span>
+        <span class="c1"># outputFile = file(self.inputDir+&quot;.CovRes&quot;, mode=&#39;w&#39;)</span>
+        <span class="c1"># outputFile.write(&quot;1 depth:\t&quot; + str(oneDepth) +</span>
+        <span class="c1">#                  &quot;\n5 depth:\t&quot; + str(fiveDepth) +</span>
+        <span class="c1">#                  &quot;\n10 depth:\t&quot; + str(tenDepth) +</span>
+        <span class="c1">#                  &quot;\n15 depth:\t&quot; + str(fifteenDepth) +</span>
+        <span class="c1">#                  &quot;\n20 depth:\t&quot; + str(twentyDepth))</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="VisualisationTools.readBedToLocal"><a class="viewcode-back" href="../code.html#VisualisationTools.VisualisationTools.readBedToLocal">[docs]</a>    <span class="k">def</span> <span class="nf">readBedToLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the BED file into the memory for fast access.</span>
+<span class="sd">        The BED file here is a BED file giving read depth per position</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bedFile</span> <span class="o">=</span> <span class="n">file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputDir</span><span class="o">+</span><span class="s2">&quot;.bed&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="n">bedList</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">scaffoldList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">scaffold</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">bedFile</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">scaffold</span> <span class="o">!=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">scaffold</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                    <span class="n">bedList</span><span class="p">[</span><span class="n">scaffold</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaffoldList</span>
+                <span class="n">scaffold</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">scaffoldList</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">scaffoldList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">allList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">bedList</span><span class="p">[</span><span class="n">scaffold</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaffoldList</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depthPerPos</span> <span class="o">=</span> <span class="n">bedList</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="VisualisationTools.readCovBedtoLocal"><a class="viewcode-back" href="../code.html#VisualisationTools.VisualisationTools.readCovBedtoLocal">[docs]</a>    <span class="k">def</span> <span class="nf">readCovBedtoLocal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the occurance of a read depth over the whole genome.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        None (Null): returns to the place of calling</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">covFile</span> <span class="o">=</span> <span class="n">file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputDir</span> <span class="o">+</span> <span class="s2">&quot;.CovBed&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depthOccurance</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">covFile</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;genome&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">depthOccurance</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depthOccurance</span><span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">depthOccurance</span><span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalSize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="VisualisationTools.saveAsCSV"><a class="viewcode-back" href="../code.html#VisualisationTools.VisualisationTools.saveAsCSV">[docs]</a>    <span class="k">def</span> <span class="nf">saveAsCSV</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the information from the BED depth per position to a CSV file for visualisation</span>
+<span class="sd">        important: whole genome is big! think before visualising!</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        None (Null): returns to the place of calling</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">depthPerPos</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">outputFile</span> <span class="o">=</span> <span class="n">file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputDir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">outputFile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;pos,depth</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">outputFile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;,&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">depth</span><span class="p">))</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">outputFile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="VisualisationTools.getCoveragePercentage"><a class="viewcode-back" href="../code.html#VisualisationTools.VisualisationTools.getCoveragePercentage">[docs]</a>    <span class="k">def</span> <span class="nf">getCoveragePercentage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the percentage of coverage over the whole genome by an set read depth</span>
+<span class="sd">        Input:</span>
+<span class="sd">        depth (int): depth that you want to get the coverage rate from</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        percentageMore (float): the percentage of coverage at the given depth</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lessVal</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">depthOccurance</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">&lt;</span> <span class="n">depth</span><span class="p">:</span>
+                <span class="n">lessVal</span> <span class="o">+=</span> <span class="n">value</span>
+        <span class="nb">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">totalSize</span>
+        <span class="n">percentageLess</span> <span class="o">=</span> <span class="n">lessVal</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">totalSize</span>
+        <span class="n">percentageMore</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">percentageLess</span>
+        <span class="k">return</span> <span class="n">percentageMore</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../forServerRun.html">Pipeline ENZA zaden 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, H.J.C. Cornelisse.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
+    </div>
+  </body>
+</html>
