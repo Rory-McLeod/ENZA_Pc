@@ -1,6 +1,5 @@
 Auto Generated Documentation
 ============================
-.. todo:: testing of class VisualisationTools. local test worked before
 .. todolist::
 
 .. automodule:: VisualisationTools

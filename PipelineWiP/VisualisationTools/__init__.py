@@ -1,9 +1,6 @@
 #!/usr/bin/env python
-
-"""
-Created on: August 2016
-:author: H.J.C. Cornelisse
-"""
+#.. todo:: test this shit out!
+""
 from __future__ import division
 import threading
 

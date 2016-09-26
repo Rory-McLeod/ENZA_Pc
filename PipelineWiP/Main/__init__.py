@@ -9,15 +9,21 @@ Todo:
 import os.path
 import gzip
 import sys
-from time import gmtime, strftime
+from time import strftime
+import subprocess
 
 
 class Main:
-
     fastQFileList = []
     refGenomeList = []
     mapperClass = []
+    assemblerClass = []
     bamClass = []
+    primerDesClass = []
+    genesFile = ""
+    gffFile = ""
+    workDir = ""
+    resultDir = ""
 
     def __init__(self):
         """
@@ -137,4 +143,17 @@ class Main:
         """
         timeSpot = strftime("%Y-%m-%d %H:%M:%S")
         print "[" + timeSpot + "]" + line
+        return
+
+    @staticmethod
+    def execute(cmd, worktext="working, please wait"):
+        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        Main.printer(worktext)
+        jobNr, stderr = p.communicate()
+        if p.returncode == 0:
+            print "Done! "
+        else:
+            print "Error"
+            for line in stderr:
+                print line
         return

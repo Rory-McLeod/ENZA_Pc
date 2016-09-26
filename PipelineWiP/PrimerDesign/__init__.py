@@ -16,6 +16,8 @@ from Main import Main
 import math
 from collections import defaultdict
 import numpy
+from NUCmer import NUCmer
+import itertools
 
 class PrimerDesign(threading.Thread):
 
@@ -229,3 +231,152 @@ class PrimerDesign(threading.Thread):
                             end.add(startEnd[1])
                         perChrom[chr] = [start, end]
         return perChrom
+
+
+class PrimerDesignByDenovo:
+
+    def __init__(self):
+        self.coordsInfo = list()
+        self.geneInfo = dict()
+        self.hitList = dict()
+        return
+
+    def readCoords(self, coordsFile):
+        coordsHits = dict()
+        coordsFile = open(coordsFile, mode="r")
+        for line in coordsFile:
+            line = line.split()
+            if len(line) == 19:
+                if line[17] not in coordsHits:
+                    coordsHits[line[17]] = NUCmer(line[17])
+                coordsHits[line[17]].hit(int(line[0]), int(line[1]), line[18])
+        self.coordsInfo.append(coordsHits)
+        coordsFile.close()
+        return
+
+    def readGenes(self, geneFile=Main.gffFile):
+        geneFile = open(geneFile, mode="r")
+        for line in geneFile:
+            if "exon" in line:
+                line = line.split()
+                if line[0] not in self.geneInfo:
+                    self.geneInfo[line[0]] = NUCmer(line[0])
+                self.geneInfo[line[0]].hit(int(line[3]), int(line[4]), line[8])
+        geneFile.close()
+        return
+
+    def generateHitList(self):
+        self.HitList = dict()
+        allScaffold = set()
+        i = 0
+        for coordsDict in self.coordsInfo:
+            allScaffold.update(set(coordsDict.keys()))
+        for scaffold in allScaffold:
+            HitList = list()
+            if all(scaffold in key for key in self.coordsInfo):
+                StartList = list()
+                EndList = list()
+                for coordsDict in self.coordsInfo:
+                    coordsDict[scaffold].combineStartEnds()
+                    StartList.append(coordsDict[scaffold].starts)
+                    EndList.append(coordsDict[scaffold].ends)
+                for starts in StartList:
+                    for start in starts:
+                        trueFalseCheck = list()
+                        i += 1
+                        y = 0
+                        end = EndList[StartList.index(starts)][starts.index(start)]
+                        for compareStarts in StartList:
+                            y += 1
+                            if i == y:
+                                continue
+                            checkStarts = [i for i in compareStarts if i <= start]
+                            checkEnds = [i for i in EndList[StartList.index(compareStarts)] if i > start]
+                            indexSetStart = set()
+                            indexSetEnd = set()
+                            for item in checkStarts:
+                                indexSetStart.add(compareStarts.index(item))
+                            for item in checkEnds:
+                                indexSetEnd.add(EndList[StartList.index(compareStarts)].index(item))
+                            indexSet = indexSetStart.intersection(indexSetEnd)
+                            if len(indexSet) > 0:
+                                trueFalseCheck.append(True)
+                            else:
+                                trueFalseCheck.append(False)
+                            for index in indexSet:
+                                if end > EndList[StartList.index(compareStarts)][index]:
+                                    end = EndList[StartList.index(compareStarts)][index]
+                        if all(check for check in trueFalseCheck):
+                            HitList.append([start, end])
+            HitList.sort()
+            HitList = list(HitList for HitList,_ in itertools.groupby(HitList))
+            print scaffold + " " + str(len(HitList))
+            self.HitList[scaffold] = HitList
+
+    def generateGeneSpecificHitList(self):
+        outputFile = open(Main.workDir+"/denovoPoI.gff", mode="w")
+        delimiter = "\t"
+        endLine = "\n"
+        intersectScaffold = set.intersection(set(self.HitList.keys()), set(self.geneInfo.keys()))
+        for scaffold in intersectScaffold:
+            Hitlist = list()
+            self.geneInfo[scaffold].combineStartEnds()
+            geneStart = self.geneInfo[scaffold].starts
+            geneEnd = self.geneInfo[scaffold].ends
+            CoverStart = list()
+            CoverEnd = list()
+            for item in self.HitList[scaffold]:
+                start = item[0]
+                end = item[1]
+                GeneHit = False
+                CoverStart.append(start)
+                CoverEnd.append(end)
+                Gstart = [i for i in geneStart if i <= start]
+                Gend = [i for i in geneEnd if i > start]
+                GindexSetStart = set()
+                GindexSetEnd = set()
+                for Gitem in Gstart:
+                    GindexSetStart.add(geneStart.index(Gitem))
+                for Gitem in Gend:
+                    GindexSetEnd.add(geneEnd.index(Gitem))
+                GindexSet = GindexSetStart.intersection(GindexSetEnd)
+                if len(GindexSet) > 0 :
+                    GeneHit = True
+                for index in GindexSet:
+                    if end > geneEnd[index]:
+                        end = geneEnd[index]
+                if GeneHit is True:
+                    Hitlist.append([start, end])
+
+            for Gstart in geneStart:
+                start = Gstart
+                end = geneEnd[geneStart.index(Gstart)]
+                CoverHit = False
+                Cstart = [i for i in CoverStart if i <= start]
+                Cend = [i for i in CoverEnd if i > start]
+                CindexSetStart = set()
+                CindexSetEnd = set()
+                for Citem in Cstart:
+                    CindexSetStart.add(CoverStart.index(Citem))
+                for Citem in Cend:
+                    CindexSetEnd.add(CoverEnd.index(Citem))
+                CindexSet = CindexSetStart.intersection(CindexSetEnd)
+                if len(CindexSet) > 0:
+                    CoverHit = True
+                for index in CindexSet:
+                    if end > CoverEnd[index]:
+                        end = CoverEnd[index]
+                if CoverHit is True:
+                    Hitlist.append([start, end])
+            Hitlist.sort()
+            Hitlist = list(Hitlist for Hitlist, _ in itertools.groupby(Hitlist))
+            print scaffold + " " + str(len(Hitlist))
+            starts = set()
+            for item in Hitlist:
+                if item[0] not in starts:
+                    outputFile.write(scaffold+delimiter+"Dundee"+delimiter+
+                                     "CDS"+delimiter+item[0]+delimiter+item[1])
+                    print str(item[0]) + " : " + str(item[1])
+                    starts.add(item[0])
+        return
+

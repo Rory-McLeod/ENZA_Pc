@@ -41,7 +41,7 @@ class ReadAligner(threading.Thread):
         """
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         Main.printer(worktext)
-        jobNr, stderr = p.communicate()
+        stderr = p.communicate()[1]
         if p.returncode == 0:
             print "Done! "
         else:
@@ -49,6 +49,7 @@ class ReadAligner(threading.Thread):
             for line in stderr:
                 print line
             sys.exit(1)
+        Main.printer(stderr)
         return
 
 
