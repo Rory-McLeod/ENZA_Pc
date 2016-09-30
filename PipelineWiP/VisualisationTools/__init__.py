@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #.. todo:: test this shit out!
-""
+
 from __future__ import division
 import threading
 
@@ -17,6 +17,7 @@ class VisualisationTools(threading.Thread):
     allList = []
     totalSize = 0
 
+    # TODO: remove outputDir
     def __init__(self, inputDir, outputDir):
         """
         Method for initiating the visualisation tool.
@@ -26,7 +27,6 @@ class VisualisationTools(threading.Thread):
         """
         threading.Thread.__init__(self)
         self.inputDir = inputDir
-        self.outputDir = outputDir
         return
 
     def run(self):
@@ -36,18 +36,18 @@ class VisualisationTools(threading.Thread):
         :returns: None (Null): returns to the place of calling
         """
         self.readBedToLocal()
-        # self.readCovBedtoLocal()
-        # oneDepth = self.getCoveragePercentage()
-        # fiveDepth = self.getCoveragePercentage(5)
-        # tenDepth = self.getCoveragePercentage(10)
-        # fifteenDepth = self.getCoveragePercentage(15)
-        # twentyDepth = self.getCoveragePercentage(20)
-        # outputFile = file(self.inputDir+".CovRes", mode='w')
-        # outputFile.write("1 depth:\t" + str(oneDepth) +
-        #                  "\n5 depth:\t" + str(fiveDepth) +
-        #                  "\n10 depth:\t" + str(tenDepth) +
-        #                  "\n15 depth:\t" + str(fifteenDepth) +
-        #                  "\n20 depth:\t" + str(twentyDepth))
+        self.readCovBedtoLocal()
+        oneDepth = self.getCoveragePercentage()
+        fiveDepth = self.getCoveragePercentage(5)
+        tenDepth = self.getCoveragePercentage(10)
+        fifteenDepth = self.getCoveragePercentage(15)
+        twentyDepth = self.getCoveragePercentage(20)
+        outputFile = file(self.inputDir+".CovRes", mode='w')
+        outputFile.write("1 depth:\t" + str(oneDepth) +
+                         "\n5 depth:\t" + str(fiveDepth) +
+                         "\n10 depth:\t" + str(tenDepth) +
+                         "\n15 depth:\t" + str(fifteenDepth) +
+                         "\n20 depth:\t" + str(twentyDepth))
         return
 
     def readBedToLocal(self):
@@ -92,23 +92,6 @@ class VisualisationTools(threading.Thread):
         self.totalSize = int(line[3])
         return
 
-    def saveAsCSV(self):
-        """
-        Saves the information from the BED depth per position to a CSV file for visualisation
-        important: whole genome is big! think before visualising!
-        Returns:
-        None (Null): returns to the place of calling
-        """
-        for key, value in self.depthPerPos.iteritems():
-            i = 1
-            outputFile = file(self.outputDir + "/" + key + ".csv", mode='w')
-            outputFile.write("pos,depth\n")
-            for depth in value:
-                outputFile.write(str(i)+","+str(depth))
-                i += 1
-            outputFile.close()
-        return
-
     def getCoveragePercentage(self, depth=1):
         """
         Returns the percentage of coverage over the whole genome by an set read depth
@@ -122,7 +105,30 @@ class VisualisationTools(threading.Thread):
             key = int(key)
             if key < depth:
                 lessVal += value
-        print self.totalSize
         percentageLess = lessVal/self.totalSize
         percentageMore = 1.0 - percentageLess
         return percentageMore
+
+class Mapping:
+
+    def __init__(self, scaffold):
+        self.hitList = list()
+        self.starts = list()
+        self.ends = list()
+        self.startEnd = list()
+        self.scaffold = scaffold
+        return
+
+    def hit(self, start, end, ContigID):
+        hitItem = [start, end, ContigID]
+        self.startEnd.append([start, end])
+        self.starts.append(start)
+        self.ends.append(end)
+        self.hitList.append(hitItem)
+        return
+
+    def getStartEnds(self, startEnd=0):
+        returnList = list()
+        for hitItem in self.hitList:
+            returnList.append(hitItem[startEnd])
+        return returnList

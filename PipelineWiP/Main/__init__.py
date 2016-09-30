@@ -20,6 +20,7 @@ class Main:
     assemblerClass = []
     bamClass = []
     primerDesClass = []
+    visualisationClass = []
     genesFile = ""
     gffFile = ""
     workDir = ""
@@ -64,7 +65,7 @@ class Main:
                 except IOError:
                     print "Error unzipping file. please do this manually and rerun the program"
                     sys.exit(1)
-            elif ".fastq" in fastQ:
+            elif ".fastq" in fastQ or ".fq" in fastQ:
                 self.fastQFileList.append(fastQ)
             else:
                 print "File " + str(fastQ) + " does not have the correct extension. please check if file is fastq" \

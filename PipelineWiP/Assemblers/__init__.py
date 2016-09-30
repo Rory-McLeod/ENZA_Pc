@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import subprocess
 import threading
 from Main import Main
@@ -7,7 +8,8 @@ import os
 
 
 class Assemblers(threading.Thread):
-
+    # TODO: remove execute from Assembler to Main module
+    # TODO: change gffChanger for output in Main.workdir instead of program place
     def __init__(self):
         threading.Thread.__init__(self)
         return
@@ -28,33 +30,37 @@ class Assemblers(threading.Thread):
 
     @staticmethod
     def quast(contigs):
-        geneFile = Assemblers.gffChanger()
+        geneFile = Assemblers.gffChanger(Main.gffFile)
         workline = "/mnt/apps/quast/quast-2.3/quast.py -o " + Main.resultDir + " -R " + Main.refGenomeList[0] +\
-                   " -G " + geneFile + contigs
+                   " -G " + geneFile + " " + contigs
         print workline
         Assemblers.execute(workline, "Running quast, please wait!")
         return
 
     @staticmethod
-    def gffChanger():
-        gffFile = open(Main.gffFile, mode="r")
-        quastFileName = Main.gffFile[:-3]+".gff2"
+    def gffChanger(gffFileName):
+        i = 0
+        gffFile = open(gffFileName, mode="r")
+        quastFileName = gffFileName[:-4]+".txt"
         quastFile = open(quastFileName, mode="w")
         for line in gffFile:
-            line = line.split("\t")
-            if "-" in line[6]:
-                start = line[4]
-                end = line[3]
-            else:
-                start = line[3]
-                end = line[4]
-            quastFile.write(line[0] + "\t" + line[8] + "\t" + start + "\t" + end + "\n")
+            if "exon" in line:
+                line = line.split("\t")
+                if "-" in line[6]:
+                    start = line[4]
+                    end = line[3]
+                else:
+                    start = line[3]
+                    end = line[4]
+                quastFile.write(line[0] + "\t" + str(i) + "\t" + start + "\t" + end + "\n")
+                i += 1
         gffFile.close()
         quastFile.close()
         return quastFileName
 
 class Spades(Assemblers):
-
+    # TODO: change print to Main Printer
+    # TODO: run Main execute instead of assembler
     def __init__(self, fileForward, fileReversed, workDir):
         threading.Thread.__init__(self)
         self.fileForward = fileForward

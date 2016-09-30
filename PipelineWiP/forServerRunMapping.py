@@ -13,7 +13,6 @@ import threading
 import PrimerDesign
 from Blast import Blast
 import copy
-import NUCmer
 
 fastQFileList = []
 refGenomeList = []
@@ -81,90 +80,80 @@ threadList = list()
 #     thread = threading.Thread(Main.Main.execute(workLine, "Generating fastQC reports in the background"))
 #     thread.start()
 #     threadList.append(thread)
-# if len(worker.fastQFileList) > 2:
-#     fastQPairs = len(worker.fastQFileList) - 1
-#     i = 0
-#     while i < fastQPairs:
+if len(worker.fastQFileList) > 2:
+    fastQPairs = len(worker.fastQFileList) - 1
+    i = 0
+    while i < fastQPairs:
 #         assembler = Assemblers.Spades(worker.fastQFileList[i], worker.fastQFileList[i + 1], options.output_filepath)
-# #         mapper = ReadAligner.Bowtie2(worker.fastQFileList[i], worker.fastQFileList[i+1],
-# #                                      worker.refGenomeList[0], options.output_filepath)
-# #         worker.mapperClass.append(mapper)
+        mapper = ReadAligner.Bowtie2(worker.fastQFileList[i], worker.fastQFileList[i+1],
+                                     worker.refGenomeList[0], options.output_filepath)
+        worker.mapperClass.append(mapper)
 #         worker.assemblerClass.append(assembler)
-# #         mapper.start()
+        mapper.start()
 #         assembler.start()
-#         i += 2
-# else:
+        i += 2
+else:
 #     assembler = Assemblers.Spades(worker.fastQFileList[0], worker.fastQFileList[1], options.output_filepath)
-# #     mapper = ReadAligner.Bowtie2(worker.fastQFileList[0], worker.fastQFileList[1],
-# #                                  worker.refGenomeList[0], options.output_filepath)
-# #     worker.mapperClass.append(mapper)
+    mapper = ReadAligner.Bowtie2(worker.fastQFileList[0], worker.fastQFileList[1],
+                                 worker.refGenomeList[0], options.output_filepath)
+    worker.mapperClass.append(mapper)
 #     worker.assemblerClass.append(assembler)
-# #     mapper.start()
+    mapper.start()
 #     assembler.start()
-# #
-# # for mapper in worker.mapperClass:
-# #     mapper.join()
+#
+for mapper in worker.mapperClass:
+    mapper.join()
 # contigs = ""
 # for assembler in worker.assemblerClass:
 #     assembler.join()
-#     contigs += assembler.outputDir + " " +
-contigs = "workDir/Y006W_S7_L001_R1_001P100/Y006W_S7_L001_R1_001P100.fa workDir/Q108_S9_L001_R1_001P100/Q108_S9_L001_R1_001P100.fa workDir/AD84_S8_L001_R1_001P100/AD84_S8_L001_R1_001P100.fa "
-## thread = threading.Thread(Assemblers.Assemblers.quast(contigs))
-## thread.start()
-## threadList.append(thread)
-#
-# for mapper in worker.mapperClass:
-#     bamWorker = ReadAligner.BamTools(mapper.samFile, mapper.referenceDB)
-#     bamWorker.start()
-#     worker.bamClass.append(bamWorker)
-#
-# for bamWorker in worker.bamClass:
-#     bamWorker.join()
-# #
-# for bamWorker in worker.bamClass:
-#     visualisationTool = VisualisationTools(bamWorker.samFile, options.result_filepath)
-#     visualisationTool.start()
-#     worker.visualisationClass.append(visualisationTool)
-#
-# for visualisationTool in worker.visualisationClass:
-#     visualisationTool.join()
-#
-# mapperPrimer = PrimerDesign.PrimerDesignByMapping()
-# mapperPrimer.readGenes(Main.Main.gffFile)
-# for visualisationTool in worker.visualisationClass:
-#     mapperPrimer.generateCoords(visualisationTool.depthPerPos)
-# mapperPrimer.generateHitList()
-# mapperPrimer.generateGeneSpecificHitList()
-# PrimerDesign.PrimerDesign.saveFasta("mapperPOI.fa",
-#                                     PrimerDesign.PrimerDesign.readGFF(
-#                                         Main.Main.workDir+"/MapperPoI.gff",
-#                                         PrimerDesign.PrimerDesign.readRefGenome(Main.Main.refGenomeList[0])
-#                                     ))
+#     contigs += " " + assembler.outputDir
 
+# thread = threading.Thread(Assemblers.Assemblers.quast(contigs))
+# thread.start()
+# threadList.append(thread)
 #
-contigs = contigs.split(" ")
-nucmerList = list()
-for contig in contigs:
-    if len(contig) > 0:
-        nucmerRun = NUCmer.NUCmerRun(contig)
-        nucmerRun.start()
-        nucmerList.append(nucmerRun)
-for nucmerRun in nucmerList:
-    nucmerRun.join()
-denovoPrimer = PrimerDesign.PrimerDesignByDenovo()
-denovoPrimer.readGenes(Main.Main.gffFile)
-for contig in contigs:
-    if len(contig) > 0:
-        print "contig: " + contig
-        denovoPrimer.readCoords(contig)
-print len(denovoPrimer.hitList)
-denovoPrimer.generateHitList()
-denovoPrimer.generateGeneSpecificHitList()
-PrimerDesign.PrimerDesign.saveFasta("deNovoPOI.fa",
+for mapper in worker.mapperClass:
+    bamWorker = ReadAligner.BamTools(mapper.samFile, mapper.referenceDB)
+    bamWorker.start()
+    worker.bamClass.append(bamWorker)
+
+for bamWorker in worker.bamClass:
+    bamWorker.join()
+
+for bamWorker in worker.bamClass:
+    visualisationTool = VisualisationTools(bamWorker.samFile, options.result_filepath)
+    visualisationTool.start()
+    worker.visualisationClass.append(visualisationTool)
+
+for visualisationTool in worker.visualisationClass:
+    visualisationTool.join()
+
+mapperPrimer = PrimerDesign.PrimerDesignByMapping()
+mapperPrimer.readGenes(Main.Main.gffFile)
+for visualisationTool in worker.visualisationClass:
+    mapperPrimer.generateCoords(visualisationTool.depthPerPos)
+mapperPrimer.generateHitList()
+mapperPrimer.generateGeneSpecificHitList()
+PrimerDesign.PrimerDesign.saveFasta("mapperPOI.fa",
                                     PrimerDesign.PrimerDesign.readGFF(
-                                        Main.Main.workDir+"/denovoPoI.gff",
+                                        Main.Main.workDir+"/MapperPoI.gff",
                                         PrimerDesign.PrimerDesign.readRefGenome(Main.Main.refGenomeList[0])
                                     ))
+
+#
+# contigs = contigs.split(" ")
+# denovoPrimer = PrimerDesign.PrimerDesignByDenovo()
+# denovoPrimer.readGenes(Main.Main.gffFile)
+# for contig in contigs:
+#     denovoPrimer.readCoords(contig)
+#
+# denovoPrimer.generateHitList()
+# denovoPrimer.generateGeneSpecificHitList()
+# PrimerDesign.PrimerDesign.saveFasta("deNovoPOI.fa",
+#                                     PrimerDesign.PrimerDesign.readGFF(
+#                                         Main.Main.workDir+"/denovoPoI.gff",
+#                                         PrimerDesign.PrimerDesign.readRefGenome(Main.Main.refGenomeList[0])
+#                                     ))
 # otherGenomes = copy.copy(Main.Main.refGenomeList)
 # del otherGenomes[0]
 # deNovoBlast = Blast(

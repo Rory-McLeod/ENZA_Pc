@@ -46,8 +46,7 @@ class ReadAligner(threading.Thread):
             print "Done! "
         else:
             print "Error"
-            for line in stderr:
-                print line
+            print stderr
             sys.exit(1)
         Main.printer(stderr)
         return
@@ -83,8 +82,8 @@ class Bowtie2(ReadAligner):
             None: returns to the place of calling
         """
         Main.printer("Running thread to execute with more speed")
-        self.bowTie2Index(self.referenceFileName, self.outputDir)
-        self.bowTie2Map(self.outputDir)
+        self.bowTie2Index(self.referenceFileName, self.outputDir+"/")
+        self.bowTie2Map(self.outputDir+"/")
 
     def bowTie2Index(self, referenceFileName, outputdir):
         """
@@ -99,7 +98,7 @@ class Bowtie2(ReadAligner):
         Main.printer("Working on generating an index database for Bowtie2")
         referenceName = referenceFileName.split(".")
         referenceName = referenceName[0]
-        workLine = "bowtie2-build " + referenceFileName + " " + outputdir + "/" + referenceName
+        workLine = "bowtie2-build " + referenceFileName + " " + outputdir + referenceName
         self.execute(workLine, "Making index, please wait")
         self.referenceDB = referenceName
         return
@@ -114,8 +113,11 @@ class Bowtie2(ReadAligner):
             None: returns to the place of calling
         """
         fastQName = self.fastQFile1.split(".")[0]
-        samFile = outputDir + "/Bow" + self.referenceDB + fastQName + ".sam"
-        workLine = "bowtie2 -x " + outputDir + "/" + self.referenceDB + \
+        if outputDir == "":
+            samFile = fastQName + ".sam"
+        else:
+            samFile = outputDir + "/Bow" + self.referenceDB + fastQName + ".sam"
+        workLine = "bowtie2 -x " + outputDir + self.referenceDB + \
                    " -1 " + self.fastQFile1 + \
                    " -2 " + self.fastQFile2 + \
                    " -q -S " + samFile

@@ -13,11 +13,9 @@ import subprocess
 import threading
 import sys
 from Main import Main
-import math
-from collections import defaultdict
-import numpy
 from NUCmer import NUCmer
 import itertools
+import VisualisationTools
 
 class PrimerDesign(threading.Thread):
 
@@ -82,12 +80,40 @@ class PrimerDesign(threading.Thread):
         for line in referenceFile:
             line = line.rstrip()
             if ">" in line:
-                chromosomName = line.replace(">", "")
+                line = line.replace(">", "")
+                line = line.split(" ")
+                chromosomName = line[0]
                 Genome[chromosomName] = list()
             else:
                 for seqChar in line:
                     Genome[chromosomName].append(seqChar)
         return Genome
+
+    @staticmethod
+    def readGFF(gffFile, genome):
+        POI = dict()
+        gffFile = open(gffFile, mode='r')
+        for line in gffFile:
+            line = line.split("\t")
+            scaffold = line[0]
+            start = int(line[3]) - 1
+            end = int(line[4]) - 1
+            id = line[8]
+            id = id.replace("ID=", "")
+            id = id.strip()
+            sequence = ""
+            while start < end:
+                sequence += genome[scaffold][start]
+                start += 1
+            POI[id] = sequence
+        return POI
+
+    @staticmethod
+    def saveFasta(outputFile, POI):
+        outputFile = open(Main.workDir + "/" + outputFile, mode="w")
+        for key, value in POI.iteritems():
+            outputFile.write(">" + str(key) + "\n" + value + "\n")
+        outputFile.close()
 
     @staticmethod
     def generatePrimer3Input(outputFile, POI):
@@ -102,136 +128,24 @@ class PrimerDesign(threading.Thread):
         """
         outputFile = file(outputFile, mode='w')
         for key, value in POI.iteritems():
-            outputFile.write("PRIMER_SEQUENCE_ID=" + key + "\n")
-            outputFile.write("SEQUENCE=" + value + "\n")
+            outputFile.write("SEQUENCE_ID=POI" + key + "\n")
+            outputFile.write("SEQUENCE_TEMPLATE=" + value + "\n")
             outputFile.write("PRIMER_MIN_SIZE=15\n"
                              "PRIMER_MAX_SIZE=21\n"
+                             "PRIMER_PICK_LEFT_PRIMER=1\n"
+                             "PRIMER_PICK_RIGHT_PRIMER=1\n"
                              "PRIMER_NUM_NS_ACCEPTED=0\n"
                              "PRIMER_PRODUCT_SIZE_RANGE=200-500\n"  # change this to change the wanted product size
                              "PRIMER_PRODUCT_OPT_SIZE=300\n"
-                             "PRIMER_FILE_FLAG=1\n"
+                             "P3_FILE_FLAG=1\n"
                              "PRIMER_PICK_INTERNAL_OLIGO=0\n"
-                             "PRIMER_EXPLAIN_FLAG=1")
+                             "PRIMER_EXPLAIN_FLAG=1\n"
+                             "PRIMER_THERMODYNAMIC_PARAMETERS_PATH=/mnt/apps/primer3-2.3.0/src/primer3_config/\n"
+                             "=\n")
         outputFile.close()
+        workLine = "/mnt/apps/primer3-2.3.0/src/primer3_core -format_output -output=PrimerList.txt " + outputFile.name
+        PrimerDesign.execute(workLine, "Running primer3")
         return
-
-    def readsOnGenes(self):
-        """
-        Makes a subset of the sorted mapped reads to only cover the genes
-        Returns:
-            None: returns to the place of calling
-        """
-        newBamFile = self.bamFile.replace(".sorted", "Genes.sorted")
-        workLine = "samtools view -hL " + Main.genesFile + " " + self.bamFile + " | " \
-                   "samtools view -bS | samtools sort -o " + newBamFile
-        PrimerDesign.execute(workLine, "Generating gene reads only")
-        self.bamFile = newBamFile
-        return
-
-    def getTotalReads(self):
-        """
-        Gets the total reads in a sorted bam file, and saves it into a totReads file
-        Returns:
-            None: returns to the place of calling
-        """
-        workLine = "samtools view -F 0x4 " + self.bamFile + " | cut -f 1 | sort | uniq | wc -l > " \
-                                                       + self.bamFile.replace(".sorted", ".totReads")
-        PrimerDesign.execute(workLine, "Getting total reads in genes")
-        resultFile = file(self.bamFile.replace(".sorted", ".totReads"), mode='r')
-        self.totalReads = int(resultFile.readline())
-        return
-
-    def getReadsPerGene(self):
-        """
-        Generate a number for the coverage, normalized against length of the gene and the total reads in the file
-        Returns:
-            None: returns to the place of calling
-        """
-        normRedPerLengtDic = defaultdict(dict)
-        chrStartNormDic = defaultdict(dict)
-        workLine = "coverageBed -abam " + self.bamFile + " -b " + Main.genesFile + " -s > " + self.bamFile.replace(".sorted", ".tsv")
-        PrimerDesign.execute(workLine, "Generate reads per gene")
-        outputFile = file(self.bamFile.replace(".sorted", ".tsv"), mode='r')
-        for line in outputFile:
-            line = line.split("\t")
-            if line[1] == '-1':
-                continue
-            chromosom = line[0]
-            reads = float(line[4])
-            geneLength = float(line[14])
-            startPos = int(line[1])
-            endPos = int(line[2])
-            if line[5] == '-' and chromosom in chrStartNormDic and startPos in chrStartNormDic[chromosom]:
-                continue
-            normReadsPerLengthPerGene = ((reads/geneLength)/self.totalReads) * math.pow(10, 9)
-            if chromosom not in normRedPerLengtDic[normReadsPerLengthPerGene]:
-                normRedPerLengtDic[normReadsPerLengthPerGene][chromosom] = list()
-            normRedPerLengtDic[normReadsPerLengthPerGene][chromosom].append([startPos, endPos])
-            chrStartNormDic[chromosom][startPos] = normReadsPerLengthPerGene
-        self.readsPerGene = [normRedPerLengtDic, chrStartNormDic]
-        return
-
-    @staticmethod
-    def getTreshold(*args):
-        """
-        Calculates the threshold used for selecting the POI. the threshold is calculated by taking the average of
-        the coverage of a gene between n number of files, tkae the average of all thouse averages, and measure the
-        standard deviation of the same list of averages
-        Args:
-            *args: multiple dictionaries orderded by chromosom, start position of gen, coverage of the gene
-        Returns:
-            treshold: float which is the average - standard deviation
-        """
-        nrFiles = len(args)
-        chrom = set()
-        startPos = defaultdict(set)
-        sumRPKM = list()
-        for valueList in args:
-            chrom |= set(valueList.keys())
-        chrom = sorted(chrom)
-        for valueList in args:
-            for key in chrom:
-                if key in valueList:
-                    startPos[key] |= set(valueList[key].keys())
-        for chromkey, value in startPos.iteritems():
-            for startPosKey in value:
-                sum = 0
-                counter = 0
-                for i in xrange(nrFiles):
-                    if chromkey in args[i] and startPosKey in args[i][chromkey]:
-                        counter += 1
-                        sum += int(args[i][chromkey][startPosKey])
-                sumRPKM.append(float(sum)/float(counter))
-        average = numpy.mean(sumRPKM)
-        stdDev = numpy.std(sumRPKM)
-        treshold = average - stdDev
-        return treshold
-
-    @staticmethod
-    def getPOI(treshold, *args):
-        """
-        Generates a dictionary containing the start and end positions of the genes that have a higher or equal coverage
-        rate compared to the threshold.
-        Args:
-            treshold: the set threshold generated by getThreshold
-            *args: a dictionary with information coverage rate, chromosom, start - end position of gen
-
-        Returns:
-            perChrom: POI dictionary divided on chromosom, used to generate a fasta file
-        """
-        perChrom = defaultdict(list)
-        for dictPerFile in args:
-            for key, valueDict in dictPerFile.iteritems():
-                if key >= treshold:
-                    for chr, listStartEnd in valueDict.iteritems():
-                        start = set()
-                        end = set()
-                        for startEnd in listStartEnd:
-                            start.add(startEnd[0])
-                            end.add(startEnd[1])
-                        perChrom[chr] = [start, end]
-        return perChrom
-
 
 class PrimerDesignByDenovo:
 
@@ -243,13 +157,13 @@ class PrimerDesignByDenovo:
 
     def readCoords(self, coordsFile):
         coordsHits = dict()
-        coordsFile = open(coordsFile, mode="r")
+        coordsFile = open(coordsFile+".coords", mode="r")
         for line in coordsFile:
             line = line.split()
-            if len(line) == 19:
-                if line[17] not in coordsHits:
-                    coordsHits[line[17]] = NUCmer(line[17])
-                coordsHits[line[17]].hit(int(line[0]), int(line[1]), line[18])
+            if len(line) == 16:
+                if line[14] not in coordsHits:
+                    coordsHits[line[14]] = NUCmer(line[14])
+                coordsHits[line[14]].hit(int(line[0]), int(line[1]), line[15])
         self.coordsInfo.append(coordsHits)
         coordsFile.close()
         return
@@ -314,6 +228,7 @@ class PrimerDesignByDenovo:
             self.HitList[scaffold] = HitList
 
     def generateGeneSpecificHitList(self):
+        i = 0
         outputFile = open(Main.workDir+"/denovoPoI.gff", mode="w")
         delimiter = "\t"
         endLine = "\n"
@@ -374,9 +289,173 @@ class PrimerDesignByDenovo:
             starts = set()
             for item in Hitlist:
                 if item[0] not in starts:
-                    outputFile.write(scaffold+delimiter+"Dundee"+delimiter+
-                                     "CDS"+delimiter+item[0]+delimiter+item[1])
-                    print str(item[0]) + " : " + str(item[1])
+                    outputFile.write(scaffold+delimiter+"Dundee"+delimiter+"CDS"+delimiter+str(item[0])+
+                                     delimiter+str(item[1])+delimiter+"."+delimiter+"+"+delimiter+"0"+delimiter+
+                                     "ID="+str(i)+endLine)
+                    i += 1
                     starts.add(item[0])
+        outputFile.close()
         return
 
+
+class PrimerDesignByMapping:
+
+    y = 0
+
+    def __init__(self):
+        self.coordsInfo = list()
+        self.HitList = dict()
+        self.geneInfo = dict()
+        return
+
+    def generateCoords(self, depthPerPos, depthLimit=12, counterLimit=28):
+        print depthLimit
+        print counterLimit
+        print len(depthPerPos)
+        coordsHits = dict()
+        allscaffold = list(depthPerPos.keys())
+        for scaffold in allscaffold:
+            counter = 0
+            pos = 0
+            for depth in depthPerPos[scaffold]:
+                pos += 1
+                if int(depth) >= depthLimit:
+                    counter += 1
+                elif counter >= counterLimit:
+                    if scaffold not in coordsHits:
+                        coordsHits[scaffold] = VisualisationTools.Mapping(scaffold)
+                    PrimerDesignByMapping.y += 1
+                    coordsHits[scaffold].hit(pos-counter, pos-1, PrimerDesignByMapping.y)
+                    counter = 0
+                else:
+                    counter = 0
+        self.coordsInfo.append(coordsHits)
+        return
+
+    def readGenes(self, geneFile=Main.gffFile):
+        geneFile = open(geneFile, mode="r")
+        for line in geneFile:
+            if "exon" in line:
+                line = line.split()
+                if line[0] not in self.geneInfo:
+                    self.geneInfo[line[0]] = VisualisationTools.Mapping(line[0])
+                self.geneInfo[line[0]].hit(int(line[3]), int(line[4]), line[8])
+        geneFile.close()
+        return
+
+    ## TODO: optimise this part. why does it take longer now? why does it not skip if i == y?
+    def generateHitList(self):
+        self.HitList = dict()
+        allScaffold = set()
+        i = 0
+        for coordsDict in self.coordsInfo:
+            allScaffold.update(set(coordsDict.keys()))
+        for scaffold in allScaffold:
+            HitList = list()
+            if all(scaffold in key for key in self.coordsInfo):
+                startList = list()
+                endList = list()
+                for coordsDict in self.coordsInfo:
+                    startList.append(coordsDict[scaffold].starts)
+                    endList.append(coordsDict[scaffold].ends)
+                for starts in startList:
+                    for start in starts:
+                        trueFalseCheck = list()
+                        i += 1
+                        y = 0
+                        end = endList[startList.index(starts)][starts.index(start)]
+                        for compareStarts in startList:
+                            y += 1
+                            if i == y:
+                                continue
+                            checkStarts = [i for i in compareStarts if i <= start]
+                            checkEnds = [i for i in endList[startList.index(compareStarts)] if i > start]
+                            indexSetStart = set()
+                            indexSetEnd = set()
+                            for item in checkStarts:
+                                indexSetStart.add(compareStarts.index(item))
+                            for item in checkEnds:
+                                indexSetEnd.add(endList[startList.index(compareStarts)].index(item))
+                            indexSet = indexSetStart.intersection(indexSetEnd)
+                            if len(indexSet) > 0:
+                                trueFalseCheck.append(True)
+                            else:
+                                trueFalseCheck.append(False)
+                            for index in indexSet:
+                                if end > endList[startList.index(compareStarts)][index]:
+                                    end = endList[startList.index(compareStarts)][index]
+                        if all(check for check in trueFalseCheck):
+                            HitList.append([start, end])
+            HitList.sort()
+            HitList = list(HitList for HitList,_ in itertools.groupby(HitList))
+            print len(HitList)
+            self.HitList[scaffold] = HitList
+
+    def generateGeneSpecificHitList(self):
+        i = 0
+        outputFile = open(Main.workDir + "/MapperPoI.gff", mode="w")
+        delimiter = "\t"
+        endLine = "\n"
+        intersectScaffold = set.intersection(set(self.HitList.keys()), set(self.geneInfo.keys()))
+        for scaffold in intersectScaffold:
+            Hitlist = list()
+            self.geneInfo[scaffold].combineStartEnds()
+            geneStart = self.geneInfo[scaffold].starts
+            geneEnd = self.geneInfo[scaffold].ends
+            CoverStart = list()
+            CoverEnd = list()
+            for item in self.HitList[scaffold]:
+                start = item[0]
+                end = item[1]
+                GeneHit = False
+                CoverStart.append(start)
+                CoverEnd.append(end)
+                Gstart = [i for i in geneStart if i <= start]
+                Gend = [i for i in geneEnd if i > start]
+                GindexSetStart = set()
+                GindexSetEnd = set()
+                for Gitem in Gstart:
+                    GindexSetStart.add(geneStart.index(Gitem))
+                for Gitem in Gend:
+                    GindexSetEnd.add(geneEnd.index(Gitem))
+                GindexSet = GindexSetStart.intersection(GindexSetEnd)
+                if len(GindexSet) > 0:
+                    GeneHit = True
+                for index in GindexSet:
+                    if end > geneEnd[index]:
+                        end = geneEnd[index]
+                if GeneHit is True:
+                    Hitlist.append([start, end])
+
+            for Gstart in geneStart:
+                start = Gstart
+                end = geneEnd[geneStart.index(Gstart)]
+                CoverHit = False
+                Cstart = [i for i in CoverStart if i <= start]
+                Cend = [i for i in CoverEnd if i > start]
+                CindexSetStart = set()
+                CindexSetEnd = set()
+                for Citem in Cstart:
+                    CindexSetStart.add(CoverStart.index(Citem))
+                for Citem in Cend:
+                    CindexSetEnd.add(CoverEnd.index(Citem))
+                CindexSet = CindexSetStart.intersection(CindexSetEnd)
+                if len(CindexSet) > 0:
+                    CoverHit = True
+                for index in CindexSet:
+                    if end > CoverEnd[index]:
+                        end = CoverEnd[index]
+                if CoverHit is True:
+                    Hitlist.append([start, end])
+            Hitlist.sort()
+            Hitlist = list(Hitlist for Hitlist, _ in itertools.groupby(Hitlist))
+            starts = set()
+            for item in Hitlist:
+                if item[0] not in starts:
+                    outputFile.write(scaffold + delimiter + "Dundee" + delimiter + "CDS" + delimiter + str(item[0]) +
+                                     delimiter + str(item[1]) + delimiter + "." + delimiter + "+" + delimiter + "0" +
+                                     delimiter + "ID=" + str(i) + endLine)
+                    i += 1
+                    starts.add(item[0])
+        outputFile.close()
+        return
