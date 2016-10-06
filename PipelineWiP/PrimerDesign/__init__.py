@@ -146,11 +146,60 @@ class PrimerDesign(threading.Thread):
         workLine = "/mnt/apps/primer3-2.3.0/src/primer3_core -format_output -output=PrimerList.txt " + outputFile.name
         PrimerDesign.execute(workLine, "Running primer3")
         return
+    @staticmethod
+    def runIntersect(coordsFile, outputName):
+        numb = len(coordsFile)
+        while len(coordsFile) > 1:
+            coordsFileList = list()
+            workLine = ""
+            workList = list()
+            for i, coordsFile in enumerate(coordsFile):
+                if i != 0:
+                    outPutDir = Main.workDir + "/" + str(numb) + ".bed"
+                    numb += 1
+                    workList.append(outPutDir)
+                    workLine += " -b " + coordsFile + " > " + outPutDir
+                    coordsFileList.append(outPutDir)
+                    PrimerDesign.execute(workLine, "Running intersect, please wait")
+                workLine = "intersectBed -a " + coordsFile
+            coordsFile = coordsFileList
+        fromBED = open(coordsFile[0], mode="r")
+        toGFFFileName = Main.workDir + outputName
+        toGFF = open(toGFFFileName, mode="w")
+        for i, line in enumerate(fromBED):
+            line = line.split("\t")
+            toGFF.write(line[0] + "\t" + "." + "\t" + "CDS" + "\t" + line[1] + "\t" + line[
+                2].rstrip() + "\t" + "." + "\t" + "+" + "\t" + "0" + "\t"
+                        + "ID=" + str(i) + "\n")
+        return toGFFFileName
+
+    @staticmethod
+    def readGenes(y, geneFile=Main.gffFile):
+        print geneFile
+        geneInfo = dict()
+        geneFile = open(geneFile, mode="r")
+        for line in geneFile:
+            if "exon" in line:
+                line = line.split()
+                if line[0] not in geneInfo:
+                    geneInfo[line[0]] = VisualisationTools.Mapping(line[0])
+                geneInfo[line[0]].hit(int(line[3]), int(line[4]), line[8])
+        geneFile.close()
+        outputFile = Main.workDir + "/" + y + ".bed"
+        bedFile = open(outputFile, mode="w")
+        for scaffold, mapper in geneInfo.iteritems():
+            for starts, ends in zip(mapper.starts, mapper.ends):
+                bedFile.write(scaffold + "\t" + str(starts) + "\t" + str(ends) + "\n")
+        bedFile.close()
+        return outputFile
+
 
 class PrimerDesignByDenovo:
 
     def __init__(self):
-        self.coordsInfo = list()
+        self.y = 0
+        self.coordsFile = list()
+        self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
         self.geneInfo = dict()
         self.hitList = dict()
         return
@@ -164,154 +213,27 @@ class PrimerDesignByDenovo:
                 if line[14] not in coordsHits:
                     coordsHits[line[14]] = NUCmer(line[14])
                 coordsHits[line[14]].hit(int(line[0]), int(line[1]), line[15])
-        self.coordsInfo.append(coordsHits)
         coordsFile.close()
-        return
-
-    def readGenes(self, geneFile=Main.gffFile):
-        geneFile = open(geneFile, mode="r")
-        for line in geneFile:
-            if "exon" in line:
-                line = line.split()
-                if line[0] not in self.geneInfo:
-                    self.geneInfo[line[0]] = NUCmer(line[0])
-                self.geneInfo[line[0]].hit(int(line[3]), int(line[4]), line[8])
-        geneFile.close()
-        return
-
-    def generateHitList(self):
-        self.HitList = dict()
-        allScaffold = set()
-        i = 0
-        for coordsDict in self.coordsInfo:
-            allScaffold.update(set(coordsDict.keys()))
-        for scaffold in allScaffold:
-            HitList = list()
-            if all(scaffold in key for key in self.coordsInfo):
-                StartList = list()
-                EndList = list()
-                for coordsDict in self.coordsInfo:
-                    coordsDict[scaffold].combineStartEnds()
-                    StartList.append(coordsDict[scaffold].starts)
-                    EndList.append(coordsDict[scaffold].ends)
-                for starts in StartList:
-                    for start in starts:
-                        trueFalseCheck = list()
-                        i += 1
-                        y = 0
-                        end = EndList[StartList.index(starts)][starts.index(start)]
-                        for compareStarts in StartList:
-                            y += 1
-                            if i == y:
-                                continue
-                            checkStarts = [i for i in compareStarts if i <= start]
-                            checkEnds = [i for i in EndList[StartList.index(compareStarts)] if i > start]
-                            indexSetStart = set()
-                            indexSetEnd = set()
-                            for item in checkStarts:
-                                indexSetStart.add(compareStarts.index(item))
-                            for item in checkEnds:
-                                indexSetEnd.add(EndList[StartList.index(compareStarts)].index(item))
-                            indexSet = indexSetStart.intersection(indexSetEnd)
-                            if len(indexSet) > 0:
-                                trueFalseCheck.append(True)
-                            else:
-                                trueFalseCheck.append(False)
-                            for index in indexSet:
-                                if end > EndList[StartList.index(compareStarts)][index]:
-                                    end = EndList[StartList.index(compareStarts)][index]
-                        if all(check for check in trueFalseCheck):
-                            HitList.append([start, end])
-            HitList.sort()
-            HitList = list(HitList for HitList,_ in itertools.groupby(HitList))
-            print scaffold + " " + str(len(HitList))
-            self.HitList[scaffold] = HitList
-
-    def generateGeneSpecificHitList(self):
-        i = 0
-        outputFile = open(Main.workDir+"/denovoPoI.gff", mode="w")
-        delimiter = "\t"
-        endLine = "\n"
-        intersectScaffold = set.intersection(set(self.HitList.keys()), set(self.geneInfo.keys()))
-        for scaffold in intersectScaffold:
-            Hitlist = list()
-            self.geneInfo[scaffold].combineStartEnds()
-            geneStart = self.geneInfo[scaffold].starts
-            geneEnd = self.geneInfo[scaffold].ends
-            CoverStart = list()
-            CoverEnd = list()
-            for item in self.HitList[scaffold]:
-                start = item[0]
-                end = item[1]
-                GeneHit = False
-                CoverStart.append(start)
-                CoverEnd.append(end)
-                Gstart = [i for i in geneStart if i <= start]
-                Gend = [i for i in geneEnd if i > start]
-                GindexSetStart = set()
-                GindexSetEnd = set()
-                for Gitem in Gstart:
-                    GindexSetStart.add(geneStart.index(Gitem))
-                for Gitem in Gend:
-                    GindexSetEnd.add(geneEnd.index(Gitem))
-                GindexSet = GindexSetStart.intersection(GindexSetEnd)
-                if len(GindexSet) > 0 :
-                    GeneHit = True
-                for index in GindexSet:
-                    if end > geneEnd[index]:
-                        end = geneEnd[index]
-                if GeneHit is True:
-                    Hitlist.append([start, end])
-
-            for Gstart in geneStart:
-                start = Gstart
-                end = geneEnd[geneStart.index(Gstart)]
-                CoverHit = False
-                Cstart = [i for i in CoverStart if i <= start]
-                Cend = [i for i in CoverEnd if i > start]
-                CindexSetStart = set()
-                CindexSetEnd = set()
-                for Citem in Cstart:
-                    CindexSetStart.add(CoverStart.index(Citem))
-                for Citem in Cend:
-                    CindexSetEnd.add(CoverEnd.index(Citem))
-                CindexSet = CindexSetStart.intersection(CindexSetEnd)
-                if len(CindexSet) > 0:
-                    CoverHit = True
-                for index in CindexSet:
-                    if end > CoverEnd[index]:
-                        end = CoverEnd[index]
-                if CoverHit is True:
-                    Hitlist.append([start, end])
-            Hitlist.sort()
-            Hitlist = list(Hitlist for Hitlist, _ in itertools.groupby(Hitlist))
-            print scaffold + " " + str(len(Hitlist))
-            starts = set()
-            for item in Hitlist:
-                if item[0] not in starts:
-                    outputFile.write(scaffold+delimiter+"Dundee"+delimiter+"CDS"+delimiter+str(item[0])+
-                                     delimiter+str(item[1])+delimiter+"."+delimiter+"+"+delimiter+"0"+delimiter+
-                                     "ID="+str(i)+endLine)
-                    i += 1
-                    starts.add(item[0])
-        outputFile.close()
+        outputFile = Main.workDir + "/D" + str(self.y) + ".bed"
+        bedFile = open(outputFile, mode="w")
+        for scaffold, mapper in coordsHits.iteritems():
+            for starts, ends in zip(mapper.starts, mapper.ends):
+                bedFile.write(scaffold + "\t" + str(starts) + "\t" + str(ends) + "\n")
+        bedFile.close()
+        self.coordsFile.append(outputFile)
         return
 
 
 class PrimerDesignByMapping:
 
-    y = 0
-
     def __init__(self):
-        self.coordsInfo = list()
         self.HitList = dict()
-        self.geneInfo = dict()
+        self.coordsFile = list()
+        self.y = 0
+        self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
         return
 
     def generateCoords(self, depthPerPos, depthLimit=12, counterLimit=28):
-        print depthLimit
-        print counterLimit
-        print len(depthPerPos)
         coordsHits = dict()
         allscaffold = list(depthPerPos.keys())
         for scaffold in allscaffold:
@@ -329,133 +251,14 @@ class PrimerDesignByMapping:
                     counter = 0
                 else:
                     counter = 0
-        self.coordsInfo.append(coordsHits)
+        outputFile = Main.workDir + "/M" + str(self.y) + ".bed"
+        bedFile = open(outputFile, mode="w")
+        for scaffold, mapper in coordsHits.iteritems():
+            for starts, ends in zip(mapper.starts, mapper.ends):
+                bedFile.write(scaffold + "\t" + str(starts) + "\t" + str(ends) + "\n")
+        bedFile.close()
+        self.coordsFile.append(outputFile)
+        self.y += 1
         return
 
-    def readGenes(self, geneFile=Main.gffFile):
-        geneFile = open(geneFile, mode="r")
-        for line in geneFile:
-            if "exon" in line:
-                line = line.split()
-                if line[0] not in self.geneInfo:
-                    self.geneInfo[line[0]] = VisualisationTools.Mapping(line[0])
-                self.geneInfo[line[0]].hit(int(line[3]), int(line[4]), line[8])
-        geneFile.close()
-        return
 
-    ## TODO: optimise this part. why does it take longer now? why does it not skip if i == y?
-    def generateHitList(self):
-        self.HitList = dict()
-        allScaffold = set()
-        i = 0
-        for coordsDict in self.coordsInfo:
-            allScaffold.update(set(coordsDict.keys()))
-        for scaffold in allScaffold:
-            HitList = list()
-            if all(scaffold in key for key in self.coordsInfo):
-                startList = list()
-                endList = list()
-                for coordsDict in self.coordsInfo:
-                    startList.append(coordsDict[scaffold].starts)
-                    endList.append(coordsDict[scaffold].ends)
-                for starts in startList:
-                    for start in starts:
-                        trueFalseCheck = list()
-                        i += 1
-                        y = 0
-                        end = endList[startList.index(starts)][starts.index(start)]
-                        for compareStarts in startList:
-                            y += 1
-                            if i == y:
-                                continue
-                            checkStarts = [i for i in compareStarts if i <= start]
-                            checkEnds = [i for i in endList[startList.index(compareStarts)] if i > start]
-                            indexSetStart = set()
-                            indexSetEnd = set()
-                            for item in checkStarts:
-                                indexSetStart.add(compareStarts.index(item))
-                            for item in checkEnds:
-                                indexSetEnd.add(endList[startList.index(compareStarts)].index(item))
-                            indexSet = indexSetStart.intersection(indexSetEnd)
-                            if len(indexSet) > 0:
-                                trueFalseCheck.append(True)
-                            else:
-                                trueFalseCheck.append(False)
-                            for index in indexSet:
-                                if end > endList[startList.index(compareStarts)][index]:
-                                    end = endList[startList.index(compareStarts)][index]
-                        if all(check for check in trueFalseCheck):
-                            HitList.append([start, end])
-            HitList.sort()
-            HitList = list(HitList for HitList,_ in itertools.groupby(HitList))
-            print len(HitList)
-            self.HitList[scaffold] = HitList
-
-    def generateGeneSpecificHitList(self):
-        i = 0
-        outputFile = open(Main.workDir + "/MapperPoI.gff", mode="w")
-        delimiter = "\t"
-        endLine = "\n"
-        intersectScaffold = set.intersection(set(self.HitList.keys()), set(self.geneInfo.keys()))
-        for scaffold in intersectScaffold:
-            Hitlist = list()
-            self.geneInfo[scaffold].combineStartEnds()
-            geneStart = self.geneInfo[scaffold].starts
-            geneEnd = self.geneInfo[scaffold].ends
-            CoverStart = list()
-            CoverEnd = list()
-            for item in self.HitList[scaffold]:
-                start = item[0]
-                end = item[1]
-                GeneHit = False
-                CoverStart.append(start)
-                CoverEnd.append(end)
-                Gstart = [i for i in geneStart if i <= start]
-                Gend = [i for i in geneEnd if i > start]
-                GindexSetStart = set()
-                GindexSetEnd = set()
-                for Gitem in Gstart:
-                    GindexSetStart.add(geneStart.index(Gitem))
-                for Gitem in Gend:
-                    GindexSetEnd.add(geneEnd.index(Gitem))
-                GindexSet = GindexSetStart.intersection(GindexSetEnd)
-                if len(GindexSet) > 0:
-                    GeneHit = True
-                for index in GindexSet:
-                    if end > geneEnd[index]:
-                        end = geneEnd[index]
-                if GeneHit is True:
-                    Hitlist.append([start, end])
-
-            for Gstart in geneStart:
-                start = Gstart
-                end = geneEnd[geneStart.index(Gstart)]
-                CoverHit = False
-                Cstart = [i for i in CoverStart if i <= start]
-                Cend = [i for i in CoverEnd if i > start]
-                CindexSetStart = set()
-                CindexSetEnd = set()
-                for Citem in Cstart:
-                    CindexSetStart.add(CoverStart.index(Citem))
-                for Citem in Cend:
-                    CindexSetEnd.add(CoverEnd.index(Citem))
-                CindexSet = CindexSetStart.intersection(CindexSetEnd)
-                if len(CindexSet) > 0:
-                    CoverHit = True
-                for index in CindexSet:
-                    if end > CoverEnd[index]:
-                        end = CoverEnd[index]
-                if CoverHit is True:
-                    Hitlist.append([start, end])
-            Hitlist.sort()
-            Hitlist = list(Hitlist for Hitlist, _ in itertools.groupby(Hitlist))
-            starts = set()
-            for item in Hitlist:
-                if item[0] not in starts:
-                    outputFile.write(scaffold + delimiter + "Dundee" + delimiter + "CDS" + delimiter + str(item[0]) +
-                                     delimiter + str(item[1]) + delimiter + "." + delimiter + "+" + delimiter + "0" +
-                                     delimiter + "ID=" + str(i) + endLine)
-                    i += 1
-                    starts.add(item[0])
-        outputFile.close()
-        return

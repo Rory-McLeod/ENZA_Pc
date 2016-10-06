@@ -129,14 +129,12 @@ for visualisationTool in worker.visualisationClass:
     visualisationTool.join()
 
 mapperPrimer = PrimerDesign.PrimerDesignByMapping()
-mapperPrimer.readGenes(Main.Main.gffFile)
 for visualisationTool in worker.visualisationClass:
     mapperPrimer.generateCoords(visualisationTool.depthPerPos)
-mapperPrimer.generateHitList()
-mapperPrimer.generateGeneSpecificHitList()
+mapperGFFFile = PrimerDesign.PrimerDesign.runIntersect(mapperPrimer.coordsFile, "/MapperPoI.gff")
 PrimerDesign.PrimerDesign.saveFasta("mapperPOI.fa",
                                     PrimerDesign.PrimerDesign.readGFF(
-                                        Main.Main.workDir+"/MapperPoI.gff",
+                                        mapperGFFFile,
                                         PrimerDesign.PrimerDesign.readRefGenome(Main.Main.refGenomeList[0])
                                     ))
 
@@ -154,13 +152,14 @@ PrimerDesign.PrimerDesign.saveFasta("mapperPOI.fa",
 #                                         Main.Main.workDir+"/denovoPoI.gff",
 #                                         PrimerDesign.PrimerDesign.readRefGenome(Main.Main.refGenomeList[0])
 #                                     ))
-# otherGenomes = copy.copy(Main.Main.refGenomeList)
-# del otherGenomes[0]
-# deNovoBlast = Blast(
-#     Main.Main.workDir + "/deNovoPOI.fa", otherGenomes)
-# deNovoBlast.start()
-# deNovoBlast.join()
-# for thread in threadList:
-#     thread.join()
+otherGenomes = copy.copy(Main.Main.refGenomeList)
+del otherGenomes[0]
+deNovoBlast = Blast(
+    Main.Main.workDir + "/mapperPOI.fa", otherGenomes)
+print Blast.y
+deNovoBlast.start()
+deNovoBlast.join()
+for thread in threadList:
+    thread.join()
 
 

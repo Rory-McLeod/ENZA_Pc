@@ -4,10 +4,14 @@ from Main import Main
 import sys
 
 class Blast(threading.Thread):
+    y = 0
 
     def __init__(self, query, genomeList):
+        Blast.y += 1
         threading.Thread.__init__(self)
         self.genomeList = genomeList
+        for genome in self.genomeList:
+            print genome
         self.query = query
         return
 
@@ -28,7 +32,8 @@ class Blast(threading.Thread):
         allAlias = ""
         for genome in self.genomeList:
             self.makeDatabase(str(genome))
-            allAlias += " " + genome
+            allAlias += genome + " "
+        allAlias = allAlias.rstrip()
         self.aliasTool(allAlias)
         self.doBlast()
         self.interpertBlast()
@@ -42,6 +47,7 @@ class Blast(threading.Thread):
     def aliasTool(self, allAlias, outputDir=Main.workDir):
         output = outputDir+"/others"
         workline = "blastdb_aliastool -dblist \"" + allAlias + "\" -dbtype nucl -out "+output + " -title others"
+        print workline
         Blast.execute(workline, "Making one database")
         return
 
@@ -52,7 +58,7 @@ class Blast(threading.Thread):
         return
 
     def interpertBlast(self, workDir=Main.workDir):
-        blastFile = open(workDir+"/blastResult.csv")
+        blastFile = open(workDir+"/blastResult"+ Blast.y +".csv")
         self.hitSet = set()
         for line in blastFile:
             line = line.split(",")
