@@ -9,59 +9,14 @@ Todo:
 - Check the generated POI, are they covered in all three reads?
 """
 
-import subprocess
-import threading
-import sys
 from Main import Main
 from NUCmer import NUCmer
-import itertools
 import VisualisationTools
 
-class PrimerDesign(threading.Thread):
 
-    def __init__(self, bamFile):
-        """
-        Method for initiating the primer design.
-        threading.Thread is called for threaded use of this class
-        Args:
-            bamFile: raw file name to correspond to the correct files
-        """
-        threading.Thread.__init__(self)
-        self.bamFile = bamFile
-        return
+class PrimerDesign:
 
-    def run(self):
-        """
-        Method used for threaded use. the method mentioned below are run in a single thread.
-        Returns:
-            None: returns to the place of calling (start())
-        """
-        self.readsOnGenes()
-        self.getTotalReads()
-        self.getReadsPerGene()
-        return
-
-    @staticmethod
-    def execute(cmd, worktext="Primerdesign, please wait"):
-        """
-        Method to execute functions on command line.
-        Args:
-            cmd: the command line command
-            worktext: the printed text to the user
-
-        Returns:
-            None: returns to the place of calling
-        """
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        Main.printer(worktext)
-        jobNr, stderr = p.communicate()
-        if p.returncode == 0:
-            print "Done! "
-        else:
-            print "Error"
-            for line in stderr:
-                print line
-            sys.exit(1)
+    def __init__(self):
         return
 
     @staticmethod
@@ -77,6 +32,7 @@ class PrimerDesign(threading.Thread):
         Main.printer("read reference Genome")
         Genome = {}
         referenceFile = file(referenceDB)
+        chromosomName = ""
         for line in referenceFile:
             line = line.rstrip()
             if ">" in line:
@@ -88,6 +44,32 @@ class PrimerDesign(threading.Thread):
                 for seqChar in line:
                     Genome[chromosomName].append(seqChar)
         return Genome
+
+    @staticmethod
+    def removeDuplicate(gffFile):
+        gffFile = open(gffFile, mode='rw+')
+        items = list()
+        startPrev = 0
+        endPrev = 0
+        scaffoldPrev = ""
+        for line in gffFile:
+            line = line.split("\t")
+            scaffold = line[0]
+            start = int(line[3])
+            end = int(line[4])
+            if start != startPrev and end != endPrev and scaffold == scaffoldPrev:
+                items.append([scaffold, start, end])
+            elif scaffold != scaffoldPrev:
+                items.append([scaffold, start, end])
+            scaffoldPrev = scaffold
+            startPrev = start
+            endPrev = end
+        gffFile.seek(0)
+        for i, line in enumerate(items):
+            gffFile.write(line[0] + "\t" + "." + "\t" + "CDS" + "\t" + str(line[1]) + "\t" + str(line[2]) +
+                          "\t" + "." + "\t" + "+" + "\t" + "0" + "\t" + "ID=" + str(i) + "\n")
+        gffFile.truncate()
+        gffFile.close()
 
     @staticmethod
     def readGFF(gffFile, genome):
@@ -110,7 +92,7 @@ class PrimerDesign(threading.Thread):
 
     @staticmethod
     def saveFasta(outputFile, POI):
-        outputFile = open(Main.workDir + "/" + outputFile, mode="w")
+        outputFile = open(outputFile, mode="w")
         for key, value in POI.iteritems():
             outputFile.write(">" + str(key) + "\n" + value + "\n")
         outputFile.close()
@@ -126,6 +108,10 @@ class PrimerDesign(threading.Thread):
         Returns:
             None: returns to the place of calling
         """
+        outputFilePart = outputFile.split(".")
+        outputDir = Main.workDir + "/" + outputFilePart[0]
+        Main.makeDirectory(outputDir)
+        outputFile = outputDir+"/"+outputFile
         outputFile = file(outputFile, mode='w')
         for key, value in POI.iteritems():
             outputFile.write("SEQUENCE_ID=POI" + key + "\n")
@@ -143,9 +129,11 @@ class PrimerDesign(threading.Thread):
                              "PRIMER_THERMODYNAMIC_PARAMETERS_PATH=/mnt/apps/primer3-2.3.0/src/primer3_config/\n"
                              "=\n")
         outputFile.close()
-        workLine = "/mnt/apps/primer3-2.3.0/src/primer3_core -format_output -output=PrimerList.txt " + outputFile.name
-        PrimerDesign.execute(workLine, "Running primer3")
+        workLine = "/mnt/apps/primer3-2.3.0/src/primer3_core -format_output -output=" + outputDir +\
+                   "/PrimerList.txt " + outputFile.name
+        Main.execute(workLine, "Running primer3")
         return
+
     @staticmethod
     def runIntersect(coordsFile, outputName):
         numb = len(coordsFile)
@@ -160,7 +148,7 @@ class PrimerDesign(threading.Thread):
                     workList.append(outPutDir)
                     workLine += " -b " + coordsFile + " > " + outPutDir
                     coordsFileList.append(outPutDir)
-                    PrimerDesign.execute(workLine, "Running intersect, please wait")
+                    Main.execute(workLine, "Running intersect, please wait")
                 workLine = "intersectBed -a " + coordsFile
             coordsFile = coordsFileList
         fromBED = open(coordsFile[0], mode="r")
@@ -169,13 +157,24 @@ class PrimerDesign(threading.Thread):
         for i, line in enumerate(fromBED):
             line = line.split("\t")
             toGFF.write(line[0] + "\t" + "." + "\t" + "CDS" + "\t" + line[1] + "\t" + line[
-                2].rstrip() + "\t" + "." + "\t" + "+" + "\t" + "0" + "\t"
-                        + "ID=" + str(i) + "\n")
+                2].rstrip() + "\t" + "." + "\t" + "+" + "\t" + "0" + "\t" +
+                        "ID=" + str(i) + "\n")
         return toGFFFileName
 
     @staticmethod
+    def runMethodIntersect(coordsFile, outputName):
+        workLine = "intersectBed -a " + coordsFile[0] + " -b " + coordsFile[1] + " > " + outputName
+        Main.execute(workLine, "Running method intersect, please wait")
+        return outputName
+
+    @staticmethod
+    def runMethodSubstract(coordsFile, outputName):
+        workLine = "subtractBed -a " + coordsFile[0] + " -b " + coordsFile[1] + " > " + outputName
+        Main.execute(workLine, "Running substraction, please wait")
+        return outputName
+
+    @staticmethod
     def readGenes(y, geneFile=Main.gffFile):
-        print geneFile
         geneInfo = dict()
         geneFile = open(geneFile, mode="r")
         for line in geneFile:
@@ -202,6 +201,7 @@ class PrimerDesignByDenovo:
         self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
         self.geneInfo = dict()
         self.hitList = dict()
+        self.y += 1
         return
 
     def readCoords(self, coordsFile):
@@ -217,20 +217,25 @@ class PrimerDesignByDenovo:
         outputFile = Main.workDir + "/D" + str(self.y) + ".bed"
         bedFile = open(outputFile, mode="w")
         for scaffold, mapper in coordsHits.iteritems():
+            mapper.combineStartEnds()
             for starts, ends in zip(mapper.starts, mapper.ends):
                 bedFile.write(scaffold + "\t" + str(starts) + "\t" + str(ends) + "\n")
         bedFile.close()
         self.coordsFile.append(outputFile)
+        self.y += 1
         return
 
 
 class PrimerDesignByMapping:
+
+    y = 0
 
     def __init__(self):
         self.HitList = dict()
         self.coordsFile = list()
         self.y = 0
         self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
+        self.y += 1
         return
 
     def generateCoords(self, depthPerPos, depthLimit=12, counterLimit=28):

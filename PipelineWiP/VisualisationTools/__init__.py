@@ -17,8 +17,7 @@ class VisualisationTools(threading.Thread):
     allList = []
     totalSize = 0
 
-    # TODO: remove outputDir
-    def __init__(self, inputDir, outputDir):
+    def __init__(self, inputDir):
         """
         Method for initiating the visualisation tool.
         threading.Thread is called for threaded use of this class

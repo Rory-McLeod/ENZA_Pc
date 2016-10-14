@@ -113,7 +113,8 @@ class Main:
                 sys.exit(1)
         return
 
-    def makeDirectory(self, directoryName):
+    @staticmethod
+    def makeDirectory(directoryName):
         """
         Makes the temporary folders for workfiles and resultfiles.
         Args:
@@ -155,6 +156,5 @@ class Main:
             print "Done! "
         else:
             print "Error"
-            for line in stderr:
-                print line
+            print stderr
         return

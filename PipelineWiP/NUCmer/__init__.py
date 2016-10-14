@@ -1,4 +1,5 @@
-import subprocess
+#!/usr/bin/env python
+
 import threading
 from Main import Main
 
@@ -35,6 +36,7 @@ class NUCmer:
         self.startEnd = list()
         self.starts = list()
         self.ends = list()
+        self.hitList.sort(key=lambda x: int(x[0]))
         for hitItem in self.hitList:
             if end > hitItem[0] >= start:
                 if hitItem[1] > end:
@@ -52,19 +54,6 @@ class NUCmer:
 
 class NUCmerRun(threading.Thread):
 
-    @staticmethod
-    def execute(cmd, worktext="NUCmer, please wait"):
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        Main.printer(worktext)
-        jobNr, stderr = p.communicate()
-        if p.returncode == 0:
-            print "Done! "
-        else:
-            print "Error"
-            for line in stderr:
-                print line
-        return
-
     def __init__(self, contigs):
         threading.Thread.__init__(self)
         self.contigs = contigs
@@ -73,7 +62,7 @@ class NUCmerRun(threading.Thread):
     def run(self):
         workline = "nucmer -maxmatch -p " + self.contigs + " " + \
                    Main.refGenomeList[0] + " " + self.contigs
-        NUCmerRun.execute(workline, "Running NUCmer, please wait")
+        Main.execute(workline, "Running NUCmer, please wait")
         workline = "show-coords -l " + self.contigs + ".delta > " + self.contigs + ".coords"
-        NUCmerRun.execute(workline, "Generating coordinate locations, please wait")
+        Main.execute(workline, "Generating coordinate locations, please wait")
         return

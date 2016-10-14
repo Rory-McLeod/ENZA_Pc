@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import subprocess
 import threading
 from Main import Main
-import sys
 import os
 
 
@@ -15,26 +13,12 @@ class Assemblers(threading.Thread):
         return
 
     @staticmethod
-    def execute(cmd, worktext="Assembling, please wait"):
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        Main.printer(worktext)
-        jobNr, stderr = p.communicate()
-        if p.returncode == 0:
-            print "Done! "
-        else:
-            print "Error"
-            for line in stderr:
-                print line
-            sys.exit(1)
-        return
-
-    @staticmethod
     def quast(contigs):
         geneFile = Assemblers.gffChanger(Main.gffFile)
         workline = "/mnt/apps/quast/quast-2.3/quast.py -o " + Main.resultDir + " -R " + Main.refGenomeList[0] +\
                    " -G " + geneFile + " " + contigs
         print workline
-        Assemblers.execute(workline, "Running quast, please wait!")
+        Main.execute(workline, "Running quast, please wait!")
         return
 
     @staticmethod
@@ -73,8 +57,7 @@ class Spades(Assemblers):
         self.outputDir = self.workDir+"/"+outputName
         workline = '/mnt/apps/SPAdes-3.1.1-Linux/bin/spades.py -1 '+self.fileForward+' -2 '+self.fileReversed+' -o ' + \
                    self.outputDir
-        Assemblers.execute(workline, "Running spades, please wait")
-        print "Changing name"
+        Main.execute(workline, "Running spades, please wait")
         os.rename(self.outputDir+"/contigs.fasta", self.outputDir+"/"+outputName+".fa")
         self.outputDir = self.outputDir+"/"+outputName+".fa"
         return

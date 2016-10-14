@@ -8,9 +8,7 @@ Todo:
 - Write BWA aligner
 """
 
-import subprocess
 import threading
-import sys
 from Main import Main
 
 class ReadAligner(threading.Thread):
@@ -27,30 +25,6 @@ class ReadAligner(threading.Thread):
         """
         threading.Thread.__init__(self)
         return
-
-    @staticmethod
-    def execute(cmd, worktext="Mapping, please wait"):
-        """
-        Method to execute functions on command line.
-        Args:
-            cmd: the command line command
-            worktext: the printed text to the user
-
-        Returns:
-            None: returns to the place of calling
-        """
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        Main.printer(worktext)
-        stderr = p.communicate()[1]
-        if p.returncode == 0:
-            print "Done! "
-        else:
-            print "Error"
-            print stderr
-            sys.exit(1)
-        Main.printer(stderr)
-        return
-
 
 class Bowtie2(ReadAligner):
 
@@ -99,7 +73,7 @@ class Bowtie2(ReadAligner):
         referenceName = referenceFileName.split(".")
         referenceName = referenceName[0]
         workLine = "bowtie2-build " + referenceFileName + " " + outputdir + referenceName
-        self.execute(workLine, "Making index, please wait")
+        Main.execute(workLine, "Making index, please wait")
         self.referenceDB = referenceName
         return
 
@@ -121,17 +95,8 @@ class Bowtie2(ReadAligner):
                    " -1 " + self.fastQFile1 + \
                    " -2 " + self.fastQFile2 + \
                    " -q -S " + samFile
-        self.execute(workLine)
+        Main.execute(workLine)
         self.samFile = samFile.replace(".sam", "")
-        return
-
-
-class BWA(ReadAligner):
-    """
-    Todo: work in progress
-    """
-
-    def BWA(self):
         return
 
 
@@ -174,7 +139,7 @@ class BamTools(ReadAligner):
             None: returns to the place of calling
         """
         workLine = "samtools view -bS " + self.samFile + ".sam | samtools sort -o " + self.samFile + ".sorted"
-        self.execute(workLine, "Creating sorted BAM file from SAM file")
+        Main.execute(workLine, "Creating sorted BAM file from SAM file")
         return
 
     def bamToBai(self):
@@ -184,7 +149,7 @@ class BamTools(ReadAligner):
             None: returns to the place of calling
         """
         workLine = "samtools index " + self.samFile + ".sorted " + self.samFile + ".bai"
-        self.execute(workLine, "Creating index from BAM file")
+        Main.execute(workLine, "Creating index from BAM file")
         return
 
     def bamToBed(self):
@@ -196,7 +161,7 @@ class BamTools(ReadAligner):
         workLine = "genomeCoverageBed " \
                    "-ibam " + self.samFile + ".sorted " \
                    "-g workDir/" + self.referenceDB + " -d >" + self.samFile + ".bed"
-        self.execute(workLine, "Generating BED file from sorted BAM file")
+        Main.execute(workLine, "Generating BED file from sorted BAM file")
         return
 
     def bamToCoverageRate(self):
@@ -208,7 +173,7 @@ class BamTools(ReadAligner):
         workLine = "genomeCoverageBed " \
                    "-ibam " + self.samFile + ".sorted " \
                    "-g workDir/" + self.referenceDB + " > " + self.samFile + ".CovBed"
-        self.execute(workLine, "Generating depth info file from BAM")
+        Main.execute(workLine, "Generating depth info file from BAM")
         return
 
     def snpCalling(self):
@@ -219,6 +184,6 @@ class BamTools(ReadAligner):
         """
         workLine = "samtools mpileup -ugf " + Main.refGenomeList[0] + " " + self.samFile + ".sorted |" \
                    " bcftools call -vmO v -o " + self.samFile + ".vcf"
-        self.execute(workLine, "Variance calling")
+        Main.execute(workLine, "Variance calling")
         return
 
