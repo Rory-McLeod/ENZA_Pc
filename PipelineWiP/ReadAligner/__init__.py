@@ -72,7 +72,7 @@ class Bowtie2(ReadAligner):
         Main.printer("Working on generating an index database for Bowtie2")
         referenceName = referenceFileName.split(".")
         referenceName = referenceName[0]
-        workLine = "bowtie2-build " + referenceFileName + " " + outputdir + referenceName
+        workLine = "bowtie2-build " + Main.genomeAdd + referenceFileName + " " + outputdir + referenceName
         Main.execute(workLine, "Making index, please wait")
         self.referenceDB = referenceName
         return
@@ -92,8 +92,8 @@ class Bowtie2(ReadAligner):
         else:
             samFile = outputDir + "/Bow" + self.referenceDB + fastQName + ".sam"
         workLine = "bowtie2 -x " + outputDir + self.referenceDB + \
-                   " -1 " + self.fastQFile1 + \
-                   " -2 " + self.fastQFile2 + \
+                   " -1 " + Main.fastQAdd + self.fastQFile1 + \
+                   " -2 " + Main.fastQAdd + self.fastQFile2 + \
                    " -q -S " + samFile
         Main.execute(workLine)
         self.samFile = samFile.replace(".sam", "")
@@ -182,8 +182,8 @@ class BamTools(ReadAligner):
         Returns:
             None: returns to the place of calling
         """
-        workLine = "samtools mpileup -ugf " + Main.refGenomeList[0] + " " + self.samFile + ".sorted |" \
-                   " bcftools call -vmO v -o " + self.samFile + ".vcf"
+        workLine = "samtools mpileup -ugf " + Main.genomeAdd +  Main.refGenomeList[0] + " " + self.samFile +\
+                   ".sorted | bcftools call -vmO v -o " + self.samFile + ".vcf"
         Main.execute(workLine, "Variance calling")
         return
 

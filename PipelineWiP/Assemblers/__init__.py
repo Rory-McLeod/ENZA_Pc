@@ -15,9 +15,8 @@ class Assemblers(threading.Thread):
     @staticmethod
     def quast(contigs):
         geneFile = Assemblers.gffChanger(Main.gffFile)
-        workline = "/mnt/apps/quast/quast-2.3/quast.py -o " + Main.resultDir + " -R " + Main.refGenomeList[0] +\
-                   " -G " + geneFile + " " + contigs
-        print workline
+        workline = "/mnt/apps/quast/quast-2.3/quast.py -o " + Main.resultDir + " -R " + Main.genomeAdd +\
+                   Main.refGenomeList[0] + " -G " + geneFile + " " + contigs
         Main.execute(workline, "Running quast, please wait!")
         return
 
@@ -55,8 +54,8 @@ class Spades(Assemblers):
         outputName = self.fileForward.split(".")
         outputName = outputName[0]
         self.outputDir = self.workDir+"/"+outputName
-        workline = '/mnt/apps/SPAdes-3.1.1-Linux/bin/spades.py -1 '+self.fileForward+' -2 '+self.fileReversed+' -o ' + \
-                   self.outputDir
+        workline = '/mnt/apps/SPAdes-3.1.1-Linux/bin/spades.py -1 ' + Main.fastQAdd + self.fileForward+' -2 ' \
+                   + Main.fastQAdd + self.fileReversed+' -o ' + self.outputDir
         Main.execute(workline, "Running spades, please wait")
         os.rename(self.outputDir+"/contigs.fasta", self.outputDir+"/"+outputName+".fa")
         self.outputDir = self.outputDir+"/"+outputName+".fa"

@@ -28,7 +28,8 @@ class Blast(threading.Thread):
         return
 
     def makeDatabase(self, genomeFile, outputDir):
-        workline = "makeblastdb -in " + genomeFile + " -parse_seqids -dbtype nucl -out " + outputDir + "/" + genomeFile
+        workline = "makeblastdb -in " + Main.genomeAdd + genomeFile + " -parse_seqids -dbtype nucl -out " + outputDir +\
+                   "/" + genomeFile
         Main.execute(workline)
         return
 

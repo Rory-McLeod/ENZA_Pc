@@ -109,9 +109,8 @@ class PrimerDesign:
             None: returns to the place of calling
         """
         outputFilePart = outputFile.split(".")
-        outputDir = Main.workDir + "/" + outputFilePart[0]
+        outputDir = outputFilePart[0]
         Main.makeDirectory(outputDir)
-        outputFile = outputDir+"/"+outputFile
         outputFile = file(outputFile, mode='w')
         for key, value in POI.iteritems():
             outputFile.write("SEQUENCE_ID=POI" + key + "\n")
@@ -123,7 +122,7 @@ class PrimerDesign:
                              "PRIMER_NUM_NS_ACCEPTED=0\n"
                              "PRIMER_PRODUCT_SIZE_RANGE=200-500\n"  # change this to change the wanted product size
                              "PRIMER_PRODUCT_OPT_SIZE=300\n"
-                             "P3_FILE_FLAG=1\n"
+                             "P3_FILE_FLAG=0\n"
                              "PRIMER_PICK_INTERNAL_OLIGO=0\n"
                              "PRIMER_EXPLAIN_FLAG=1\n"
                              "PRIMER_THERMODYNAMIC_PARAMETERS_PATH=/mnt/apps/primer3-2.3.0/src/primer3_config/\n"
@@ -198,10 +197,10 @@ class PrimerDesignByDenovo:
     def __init__(self):
         self.y = 0
         self.coordsFile = list()
-        self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
+        # self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
         self.geneInfo = dict()
         self.hitList = dict()
-        self.y += 1
+        # self.y += 1
         return
 
     def readCoords(self, coordsFile):
@@ -234,8 +233,8 @@ class PrimerDesignByMapping:
         self.HitList = dict()
         self.coordsFile = list()
         self.y = 0
-        self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
-        self.y += 1
+        # self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
+        # self.y += 1
         return
 
     def generateCoords(self, depthPerPos, depthLimit=12, counterLimit=28):

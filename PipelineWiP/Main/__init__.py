@@ -11,7 +11,7 @@ import gzip
 import sys
 from time import strftime
 import subprocess
-
+from os import listdir
 
 class Main:
     fastQFileList = []
@@ -25,6 +25,8 @@ class Main:
     gffFile = ""
     workDir = ""
     resultDir = ""
+    genomeAdd = ""
+    fastQAdd = ""
 
     def __init__(self):
         """
@@ -47,7 +49,14 @@ class Main:
         """
         # divide files to seperate fastQ files
         Main.printer("Checking fastQ files, please wait")
+        fromMap = False
+        if fastQlist is None:
+            fromMap = True
+            fastQlist = [f for f in listdir("Reads") if os.path.isfile(os.path.join("Reads", f))]
+            fastQlist.sort()
         run = 0
+        if fromMap:
+            Main.fastQAdd = "Reads/"
         for fastQ in fastQlist:
             if ".gz" in fastQ and ".fastq" in fastQ:
                 if run == 0:
@@ -55,9 +64,8 @@ class Main:
                     run = 1
                 outfilename = fastQ.replace(".gz", "")
                 try:
-
-                    inF = gzip.open(fastQ, 'rb')
-                    outF = open(outfilename, 'wb')
+                    inF = gzip.open(Main.fastQAdd + fastQ, 'rb')
+                    outF = open(Main.fastQAdd + outfilename, 'wb')
                     outF.write(inF.read())
                     inF.close()
                     outF.close()
@@ -87,7 +95,14 @@ class Main:
         """
         # select the reference genomes
         Main.printer("Checking genome files, please wait")
+        fromMap = False
+        if refGenomeFileList is None:
+            fromMap = True
+            refGenomeFileList = [f for f in listdir("Genomes") if os.path.isfile(os.path.join("Genomes", f))]
+            refGenomeFileList.sort()
         run = 0
+        if fromMap:
+            Main.genomeAdd = "Genomes/"
         for refGenome in refGenomeFileList:
             if ".fa" in refGenome or ".fsa_nt" in refGenome:
                 if ".gz" in refGenome:
@@ -96,8 +111,8 @@ class Main:
                         run = 1
                     try:
                         outfilename = refGenome.replace(".gz", "")
-                        inF = gzip.open(refGenome, 'rb')
-                        outF = open(outfilename, 'wb')
+                        inF = gzip.open(Main.genomeAdd + refGenome, 'rb')
+                        outF = open(Main.genomeAdd + outfilename, 'wb')
                         outF.write(inF.read())
                         inF.close()
                         outF.close()

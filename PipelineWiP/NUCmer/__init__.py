@@ -61,7 +61,7 @@ class NUCmerRun(threading.Thread):
 
     def run(self):
         workline = "nucmer -maxmatch -p " + self.contigs + " " + \
-                   Main.refGenomeList[0] + " " + self.contigs
+                   Main.genomeAdd + Main.refGenomeList[0] + " " + self.contigs
         Main.execute(workline, "Running NUCmer, please wait")
         workline = "show-coords -l " + self.contigs + ".delta > " + self.contigs + ".coords"
         Main.execute(workline, "Generating coordinate locations, please wait")

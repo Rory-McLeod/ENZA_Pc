@@ -77,11 +77,11 @@ Main.Main.gffFile = options.gffFile
 Main.Main.workDir = options.output_filepath
 Main.Main.resultDir = options.result_filepath
 threadList = list()
-# for fastQFile in worker.fastQFileList:
-#     workLine = "fastqc " + fastQFile + " -o " + Main.Main.resultDir + " -q --noextract"
-#     thread = threading.Thread(Main.Main.execute(workLine, "Generating fastQC reports in the background"))
-#     thread.start()
-#     threadList.append(thread)
+for fastQFile in worker.fastQFileList:
+    workLine = "fastqc " + Main.Main.fastQAdd + fastQFile + " -o " + Main.Main.resultDir + " -q --noextract"
+    thread = threading.Thread(Main.Main.execute(workLine, "Generating fastQC reports in the background"))
+    thread.start()
+    threadList.append(thread)
 if len(worker.fastQFileList) > 2:
     fastQPairs = len(worker.fastQFileList) - 1
     i = 0
@@ -108,9 +108,9 @@ contigs = ""
 for assembler in worker.assemblerClass:
     assembler.join()
     contigs += assembler.outputDir + " "
-# thread = threading.Thread(Assemblers.Assemblers.quast(contigs))
-# thread.start()
-# threadList.append(thread)
+thread = threading.Thread(Assemblers.Assemblers.quast(contigs))
+thread.start()
+threadList.append(thread)
 for mapper in worker.mapperClass:
     bamWorker = ReadAligner.BamTools(mapper.samFile, mapper.referenceDB)
     bamWorker.start()
@@ -120,7 +120,7 @@ for bamWorker in worker.bamClass:
     bamWorker.join()
 
 for bamWorker in worker.bamClass:
-    visualisationTool = VisualisationTools(bamWorker.samFile, options.result_filepath)
+    visualisationTool = VisualisationTools(bamWorker.samFile)
     visualisationTool.start()
     worker.visualisationClass.append(visualisationTool)
 
@@ -152,9 +152,11 @@ for contig in contigs:
 methodList.append(PrimerDesign.PrimerDesign.runIntersect(denovoPrimer.coordsFile, "/denovoPoI.gff"))
 methodList.append(PrimerDesign.PrimerDesign.runMethodIntersect(methodList, Main.Main.workDir+"/Intersect.gff"))
 PrimerDesign.PrimerDesign.removeDuplicate(methodList[2])
-methodList.append(PrimerDesign.PrimerDesign.runMethodSubstract([methodList[0], methodList[2]], Main.Main.workDir+"/MapperUnique.gff"))
-methodList.append(PrimerDesign.PrimerDesign.runMethodSubstract([methodList[1], methodList[2]], Main.Main.workDir+"/DenovoUnique.gff"))
-genome = PrimerDesign.PrimerDesign.readRefGenome(Main.Main.refGenomeList[0])
+methodList.append(PrimerDesign.PrimerDesign.runMethodSubstract([methodList[0], methodList[2]], Main.Main.workDir +
+                                                               "/MapperUnique.gff"))
+methodList.append(PrimerDesign.PrimerDesign.runMethodSubstract([methodList[1], methodList[2]], Main.Main.workDir +
+                                                               "/DenovoUnique.gff"))
+genome = PrimerDesign.PrimerDesign.readRefGenome(Main.Main.genomeAdd + Main.Main.refGenomeList[0])
 blastList = list()
 for PipMethod in methodList:
     fastaFile = PipMethod.rstrip()[:-3]+"fa"
@@ -165,6 +167,7 @@ otherGenomes = copy.copy(Main.Main.refGenomeList)
 del otherGenomes[0]
 blastThread = list()
 for blastItem in blastList:
+    print blastItem
     blastResult = Blast(blastItem, otherGenomes)
     blastResult.start()
     blastThread.append(blastResult)
@@ -173,13 +176,11 @@ for blastItem in blastThread:
     blastItem.join()
 
 for k, blastItem in enumerate(blastList):
-    item = blastItem[:-2]
+    item = blastItem.rstrip()[:-2]
     thread = threading.Thread(PrimerDesign.PrimerDesign.generatePrimer3Input(
-        item+".primSets", PrimerDesign.PrimerDesign.readGFF(item+"unique.gff", genome)))
+        item+"primSets", PrimerDesign.PrimerDesign.readGFF(item+"unique.gff", genome)))
     thread.start()
     threadList.append(thread)
 
 for thread in threadList:
     thread.join()
-
-
