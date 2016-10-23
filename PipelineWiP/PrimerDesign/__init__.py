@@ -4,9 +4,6 @@
 Created on: 29-08-2016
 @author: H.J.C. Cornelisse
 Class is used to generate points of interessed from the mapped reads.
-Todo:
-- Testing POI generation (currently not used in this forServerRun.py)
-- Check the generated POI, are they covered in all three reads?
 """
 
 from Main import Main
@@ -17,10 +14,12 @@ import VisualisationTools
 class PrimerDesign:
 
     def __init__(self):
+        Main.logger.debug("PrimerDesign:")
         return
 
     @staticmethod
     def readRefGenome(referenceDB):
+        Main.logger.debug("readRefGenome: r." + referenceDB)
         """
         Reads the whole genome, and saved it for fast access
         Args:
@@ -29,7 +28,7 @@ class PrimerDesign:
         Returns:
             None: returns to the place of calling
         """
-        Main.printer("read reference Genome")
+        Main.logger.info("read reference Genome")
         Genome = {}
         referenceFile = file(referenceDB)
         chromosomName = ""
@@ -47,6 +46,7 @@ class PrimerDesign:
 
     @staticmethod
     def removeDuplicate(gffFile):
+        Main.logger.debug("removeDuplicate: g." + gffFile)
         gffFile = open(gffFile, mode='rw+')
         items = list()
         startPrev = 0
@@ -73,6 +73,7 @@ class PrimerDesign:
 
     @staticmethod
     def readGFF(gffFile, genome):
+        Main.logger.debug("readGFF: gff." + gffFile + " g." + genome)
         POI = dict()
         gffFile = open(gffFile, mode='r')
         for line in gffFile:
@@ -92,6 +93,7 @@ class PrimerDesign:
 
     @staticmethod
     def saveFasta(outputFile, POI):
+        Main.logger.debug("saveFasta: o." + outputFile + " p." + POI)
         outputFile = open(outputFile, mode="w")
         for key, value in POI.iteritems():
             outputFile.write(">" + str(key) + "\n" + value + "\n")
@@ -99,6 +101,7 @@ class PrimerDesign:
 
     @staticmethod
     def generatePrimer3Input(outputFile, POI):
+        Main.logger.debug("generatePrimer3Input: o." + outputFile + " p." +POI)
         """
         Transfers the POI to a boulder IO file, used by primer3
         Args:
@@ -135,6 +138,7 @@ class PrimerDesign:
 
     @staticmethod
     def runIntersect(coordsFile, outputName):
+        Main.logger.debug("runIntersect: c." + coordsFile + " o." + outputName)
         numb = len(coordsFile)
         while len(coordsFile) > 1:
             coordsFileList = list()
@@ -162,18 +166,21 @@ class PrimerDesign:
 
     @staticmethod
     def runMethodIntersect(coordsFile, outputName):
+        Main.logger.debug("runMethodIntersect: c." + coordsFile + " o." + outputName)
         workLine = "intersectBed -a " + coordsFile[0] + " -b " + coordsFile[1] + " > " + outputName
         Main.execute(workLine, "Running method intersect, please wait")
         return outputName
 
     @staticmethod
     def runMethodSubstract(coordsFile, outputName):
+        Main.logger.debug("runMethodSubstract: c." + coordsFile + " o." + outputName)
         workLine = "subtractBed -a " + coordsFile[0] + " -b " + coordsFile[1] + " > " + outputName
         Main.execute(workLine, "Running substraction, please wait")
         return outputName
 
     @staticmethod
     def readGenes(y, geneFile=Main.gffFile):
+        Main.logger.debug("readGenes: y." + str(y) + " g." + geneFile)
         geneInfo = dict()
         geneFile = open(geneFile, mode="r")
         for line in geneFile:
@@ -195,15 +202,17 @@ class PrimerDesign:
 class PrimerDesignByDenovo:
 
     def __init__(self):
+        Main.logger.debug("PrimerDesignByDenovo:")
         self.y = 0
         self.coordsFile = list()
-        # self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
+        self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
         self.geneInfo = dict()
         self.hitList = dict()
-        # self.y += 1
+        self.y += 1
         return
 
     def readCoords(self, coordsFile):
+        Main.logger.debug("readCoords: c." + coordsFile)
         coordsHits = dict()
         coordsFile = open(coordsFile+".coords", mode="r")
         for line in coordsFile:
@@ -230,14 +239,17 @@ class PrimerDesignByMapping:
     y = 0
 
     def __init__(self):
+        Main.logger.debug("PrimerDesignByMapping:")
         self.HitList = dict()
         self.coordsFile = list()
         self.y = 0
-        # self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
-        # self.y += 1
+        self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
+        self.y += 1
         return
 
     def generateCoords(self, depthPerPos, depthLimit=12, counterLimit=28):
+        Main.logger.debug("PrimerDesignByMapping generateCoords: df." + depthPerPos +
+                          " d." + depthLimit + " c." + counterLimit)
         coordsHits = dict()
         allscaffold = list(depthPerPos.keys())
         for scaffold in allscaffold:

@@ -6,14 +6,15 @@ import os
 
 
 class Assemblers(threading.Thread):
-    # TODO: remove execute from Assembler to Main module
     # TODO: change gffChanger for output in Main.workdir instead of program place
     def __init__(self):
+        Main.logger.debug("Assemblers:")
         threading.Thread.__init__(self)
         return
 
     @staticmethod
     def quast(contigs):
+        Main.logger.debug("Quast: "+contigs)
         geneFile = Assemblers.gffChanger(Main.gffFile)
         workline = "/mnt/apps/quast/quast-2.3/quast.py -o " + Main.resultDir + " -R " + Main.genomeAdd +\
                    Main.refGenomeList[0] + " -G " + geneFile + " " + contigs
@@ -22,6 +23,7 @@ class Assemblers(threading.Thread):
 
     @staticmethod
     def gffChanger(gffFileName):
+        Main.logger.debug("gffChanger: "+gffFileName)
         i = 0
         gffFile = open(gffFileName, mode="r")
         quastFileName = gffFileName[:-4]+".txt"
@@ -42,15 +44,15 @@ class Assemblers(threading.Thread):
         return quastFileName
 
 class Spades(Assemblers):
-    # TODO: change print to Main Printer
-    # TODO: run Main execute instead of assembler
     def __init__(self, fileForward, fileReversed, workDir):
+        Main.logger.debug("Spades: f." + fileForward + " r." + fileReversed + " w." + workDir)
         threading.Thread.__init__(self)
         self.fileForward = fileForward
         self.fileReversed = fileReversed
         self.workDir = workDir
 
     def run(self):
+        Main.logger.debug("Spades run:")
         outputName = self.fileForward.split(".")
         outputName = outputName[0]
         self.outputDir = self.workDir+"/"+outputName

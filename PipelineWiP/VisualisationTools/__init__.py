@@ -3,6 +3,7 @@
 
 from __future__ import division
 import threading
+from Main import Main
 
 class VisualisationTools(threading.Thread):
     """
@@ -18,6 +19,7 @@ class VisualisationTools(threading.Thread):
     totalSize = 0
 
     def __init__(self, inputDir):
+        Main.logger.debug("VisualisationTools: i." + inputDir)
         """
         Method for initiating the visualisation tool.
         threading.Thread is called for threaded use of this class
@@ -29,6 +31,7 @@ class VisualisationTools(threading.Thread):
         return
 
     def run(self):
+        Main.logger.debug("VisualisationTools run:")
         """
         Method called upon by start(), specific for threated runs.
         Please call upon this after finishing the mapping and transfer in ReadAligner
@@ -50,6 +53,7 @@ class VisualisationTools(threading.Thread):
         return
 
     def readBedToLocal(self):
+        Main.logger.debug("VisualisationTools readBedToLocal:")
         """
         Reads the BED file into the memory for fast access.
         The BED file here is a BED file giving read depth per position
@@ -74,6 +78,7 @@ class VisualisationTools(threading.Thread):
         return
 
     def readCovBedtoLocal(self):
+        Main.logger.debug("VisualisationTools readCovBedtoLocal:")
         """
         Reads the occurance of a read depth over the whole genome.
         Returns:
@@ -92,6 +97,7 @@ class VisualisationTools(threading.Thread):
         return
 
     def getCoveragePercentage(self, depth=1):
+        Main.logger.debug("VisualisationTools getCoveragePercentage: d." + str(depth))
         """
         Returns the percentage of coverage over the whole genome by an set read depth
         Input:
@@ -111,6 +117,7 @@ class VisualisationTools(threading.Thread):
 class Mapping:
 
     def __init__(self, scaffold):
+        Main.logger.debug("Mapping: s." + scaffold)
         self.hitList = list()
         self.starts = list()
         self.ends = list()
@@ -119,6 +126,7 @@ class Mapping:
         return
 
     def hit(self, start, end, ContigID):
+        Main.logger.debug("Mapping hit: s." + str(start) + " e." + str(end) + " c." + str(ContigID))
         hitItem = [start, end, ContigID]
         self.startEnd.append([start, end])
         self.starts.append(start)
@@ -127,6 +135,7 @@ class Mapping:
         return
 
     def getStartEnds(self, startEnd=0):
+        Main.logger.debug("Mapping getStartEnds: s." + str(startEnd))
         returnList = list()
         for hitItem in self.hitList:
             returnList.append(hitItem[startEnd])

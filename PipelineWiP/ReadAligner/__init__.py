@@ -19,6 +19,7 @@ class ReadAligner(threading.Thread):
     samFile = ""
 
     def __init__(self):
+        Main.logger.debug("ReadAligner:")
         """
         Method for initiating the read aligner.
         threading.Thread is called for threaded use of this class
@@ -32,6 +33,8 @@ class Bowtie2(ReadAligner):
     outputDir = ""
 
     def __init__(self, fastQFile1, fastQFile2, referenceFileName, outputDir):
+        Main.logger.debug("Bowtie2: f1." + fastQFile1 + " f2." + fastQFile2 +
+                          " r." + referenceFileName + " o." + outputDir)
         """
         Method for initiating the read aligner, specific Bowtie2.
         threading.Thread is called for threaded use of this class
@@ -49,17 +52,19 @@ class Bowtie2(ReadAligner):
         return
 
     def run(self):
+        Main.logger.debug("Bowtie2 run:")
         """
         Method called upon by start(), starts the threaded use.
         The method runs two methods in a single thread
         Returns:
             None: returns to the place of calling
         """
-        Main.printer("Running thread to execute with more speed")
+        Main.logger.info("Running thread to execute with more speed")
         self.bowTie2Index(self.referenceFileName, self.outputDir+"/")
         self.bowTie2Map(self.outputDir+"/")
 
     def bowTie2Index(self, referenceFileName, outputdir):
+        Main.logger.debug("Bowtie2 bowTie2Index: r." + referenceFileName + " o." + outputdir)
         """
         Generates an index database for mapping the reads against (for use in Bowtie2
         Args:
@@ -69,7 +74,7 @@ class Bowtie2(ReadAligner):
         Returns:
             None: returns to the place of calling
         """
-        Main.printer("Working on generating an index database for Bowtie2")
+        Main.logger.info("Working on generating an index database for Bowtie2")
         referenceName = referenceFileName.split(".")
         referenceName = referenceName[0]
         workLine = "bowtie2-build " + Main.genomeAdd + referenceFileName + " " + outputdir + referenceName
@@ -78,6 +83,7 @@ class Bowtie2(ReadAligner):
         return
 
     def bowTie2Map(self, outputDir):
+        Main.logger.debug("Bowtie2 bowtie2map: o." + outputDir)
         """
         Method to map the reads against the generated index database by Bowtie2
         Args:
@@ -103,6 +109,7 @@ class Bowtie2(ReadAligner):
 class BamTools(ReadAligner):
 
     def __init__(self, samFile, referenceDB):
+        Main.logger.debug("BamTools: s." + samFile + " r." + referenceDB)
         """
         Method for initiating the read aligner, specific bam/sam/bed tools.
         threading.Thread is called for threaded use of this class
@@ -119,13 +126,14 @@ class BamTools(ReadAligner):
         return
 
     def run(self):
+        Main.logger.debug("BamTools run:")
         """
         Method called upon by start(), starts the threaded use.
         The method runs five methods in a single thread
         Returns:
             None: returns to the place of calling
         """
-        Main.printer("Running thread to change sam to usable files")
+        Main.logger.info("Running thread to change sam to usable files")
         self.samToBam()
         self.bamToBai()
         self.bamToBed()
@@ -133,6 +141,7 @@ class BamTools(ReadAligner):
         self.snpCalling()
 
     def samToBam(self):
+        Main.logger.debug("BamTools samToBam:")
         """
         Transfers the SAM file to a sorted BAM file. The sorted BAM file is important to speed up other processes
         Returns:
@@ -143,6 +152,7 @@ class BamTools(ReadAligner):
         return
 
     def bamToBai(self):
+        Main.logger.debug("Bamtools bamToBai:")
         """
         Generates a index file from a sorted BAM file for speed access to certain position in the genome
         Returns:
@@ -153,6 +163,7 @@ class BamTools(ReadAligner):
         return
 
     def bamToBed(self):
+        Main.logger.debug("Bamtools bamToBed:")
         """
         Generates a depth coverage per position (BED format) file from a sorted BAM file
         Returns:
@@ -165,6 +176,7 @@ class BamTools(ReadAligner):
         return
 
     def bamToCoverageRate(self):
+        Main.logger.debug("Bamtools bamToCoverageRate:")
         """
         Generates a file (CovBed) that shows the occurrence of a read depth per scaffold/chromosom and the whole genome
         Returns:
@@ -177,6 +189,7 @@ class BamTools(ReadAligner):
         return
 
     def snpCalling(self):
+        Main.logger.debug("Bamtools snpCalling:")
         """
         Finds the SNP between the reference and the mapped reads.
         Returns:
