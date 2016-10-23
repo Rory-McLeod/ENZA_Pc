@@ -12,6 +12,7 @@ import sys
 from time import strftime
 import subprocess
 from os import listdir
+import logging
 
 class Main:
     fastQFileList = []
@@ -27,12 +28,19 @@ class Main:
     resultDir = ""
     genomeAdd = ""
     fastQAdd = ""
+    threadList = list()
+    logger = logging.getLogger('WorkTitleHere')
 
     def __init__(self):
         """
         Todo:
         - Might have to remove this... don't see the use of this
         """
+        hdlr = logging.FileHandler(Main.workDir + '/logging.log')
+        formatter = logging.Formatter('%(asctime)s : %(threadName)s - %(levelname)s %(message)s')
+        hdlr.setFormatter(formatter)
+        Main.logger.addHandler(hdlr)
+        Main.logger.setLevel(logging.DEBUG)
         return
 
     def openFastQFiles(self, fastQlist):
@@ -48,7 +56,7 @@ class Main:
         - Check if file exist in current directory
         """
         # divide files to seperate fastQ files
-        Main.printer("Checking fastQ files, please wait")
+        Main.logger.debug("Checking fastQ files, please wait")
         fromMap = False
         if fastQlist is None:
             fromMap = True
@@ -58,12 +66,14 @@ class Main:
         if fromMap:
             Main.fastQAdd = "Reads/"
         for fastQ in fastQlist:
+            Main.logger.debug("Running "+fastQ)
             if ".gz" in fastQ and ".fastq" in fastQ:
                 if run == 0:
-                    print "GZip file(s) found, trying to unzip it, please wait"
+                    Main.logger.info("GZip file(s) found, trying to unzip it, please wait")
                     run = 1
                 outfilename = fastQ.replace(".gz", "")
                 try:
+                    Main.logger.debug("unzipping "+fastQ)
                     inF = gzip.open(Main.fastQAdd + fastQ, 'rb')
                     outF = open(Main.fastQAdd + outfilename, 'wb')
                     outF.write(inF.read())
@@ -71,13 +81,13 @@ class Main:
                     outF.close()
                     self.fastQFileList.append(outfilename)
                 except IOError:
-                    print "Error unzipping file. please do this manually and rerun the program"
+                    Main.logger.error("Error unzipping file. please do this manually and rerun the program")
                     sys.exit(1)
             elif ".fastq" in fastQ or ".fq" in fastQ:
                 self.fastQFileList.append(fastQ)
             else:
-                print "File " + str(fastQ) + " does not have the correct extension. please check if file is fastq" \
-                                             " then rename extension to .fastq"
+                Main.logger.error("File " + str(fastQ) + " does not have the correct extension. "
+                                  "please check if file is fastq then rename extension to .fastq")
                 sys.exit(1)
         return
 
@@ -90,11 +100,9 @@ class Main:
 
         Returns:
             None: returns to the place of calling
-        Todo:
-        - Check if file exist in current directory
         """
         # select the reference genomes
-        Main.printer("Checking genome files, please wait")
+        Main.logger.debug("Checking genome files, please wait")
         fromMap = False
         if refGenomeFileList is None:
             fromMap = True
@@ -104,12 +112,14 @@ class Main:
         if fromMap:
             Main.genomeAdd = "Genomes/"
         for refGenome in refGenomeFileList:
+            Main.logger.debug("Running "+refGenome)
             if ".fa" in refGenome or ".fsa_nt" in refGenome:
                 if ".gz" in refGenome:
                     if run == 0:
-                        print "GZip file(s) found, trying to unzip it, please wait"
+                        Main.logger.info("GZip file(s) found, trying to unzip it, please wait")
                         run = 1
                     try:
+                        Main.logger.debug("unzipping "+refGenome)
                         outfilename = refGenome.replace(".gz", "")
                         inF = gzip.open(Main.genomeAdd + refGenome, 'rb')
                         outF = open(Main.genomeAdd + outfilename, 'wb')
@@ -118,13 +128,13 @@ class Main:
                         outF.close()
                         self.refGenomeList.append(outfilename)
                     except IOError:
-                        print "Error unzipping file. please do this manually and rerun the program"
+                        Main.logger.error("Error unzipping file. please do this manually and rerun the program")
                         sys.exit(1)
                 else:
                     self.refGenomeList.append(refGenome)
             else:
-                print "File " + str(refGenome) + " does not have the correct extension. please check if file is fasta" \
-                                                 " then rename extension to .fa or other fasta extensions"
+                Main.logger.error("File " + str(refGenome) + " does not have the correct extension. please check if file is fasta" \
+                                  " then rename extension to .fa or other fasta extensions")
                 sys.exit(1)
         return
 
@@ -138,13 +148,13 @@ class Main:
         Returns:
             None: returns to the place of calling
         """
-        Main.printer("Creating directory, please wait")
+        Main.logger.debug("Creating directory, please wait")
         if not os.path.exists(directoryName):
             try:
                 os.makedirs(directoryName)
             except OSError:
-                print "Could not generate directory " + directoryName + " please check if you are allowed to generate" \
-                                                                        "directorys"
+                Main.logger.error("Could not generate directory " + directoryName +
+                                  " please check if you are allowed to generate directorys")
                 sys.exit(1)
         return
 
@@ -164,12 +174,14 @@ class Main:
 
     @staticmethod
     def execute(cmd, worktext="working, please wait"):
+        Main.logger.debug("Running command: " + cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         Main.printer(worktext)
         jobNr, stderr = p.communicate()
         if p.returncode == 0:
-            print "Done! "
+            Main.logger.info("Completed command: " + cmd)
         else:
-            print "Error"
-            print stderr
+            Main.logger.error("Error running command: " + cmd)
+            Main.logger.error(stderr)
         return
+

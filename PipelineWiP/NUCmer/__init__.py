@@ -9,11 +9,13 @@ class NUCmer:
     DuplicateSet = set()
 
     def __init__(self, scaffold):
+        Main.logger.debug("Nucmer:"+scaffold)
         self.hitList = list()
         self.scaffold = scaffold
         return
 
     def hit(self, start, end, ContigID):
+        Main.logger.debug("Nucmer hit: S"+str(start) + " E" + str(end) + " " + ContigID)
         duplicate = False
         if ContigID in NUCmer.Contigset:
             duplicate = True
@@ -25,12 +27,14 @@ class NUCmer:
         return
 
     def getStartEnds(self, startEnd=0):
+        Main.logger.debug("Nucmer getStartEnds: "+startEnd)
         returnList = list()
         for hitItem in self.hitList:
             returnList.append(hitItem[startEnd])
         return returnList
 
     def combineStartEnds(self):
+        Main.logger.debug("Nucmer combineStartEnds:")
         start = 0
         end = 0
         self.startEnd = list()
@@ -55,14 +59,18 @@ class NUCmer:
 class NUCmerRun(threading.Thread):
 
     def __init__(self, contigs):
+        Main.logger.debug("NucmerRun: "+contigs)
         threading.Thread.__init__(self)
         self.contigs = contigs
         return
 
     def run(self):
+        Main.logger.debug("NucmerRun run:")
         workline = "nucmer -maxmatch -p " + self.contigs + " " + \
                    Main.genomeAdd + Main.refGenomeList[0] + " " + self.contigs
         Main.execute(workline, "Running NUCmer, please wait")
         workline = "show-coords -l " + self.contigs + ".delta > " + self.contigs + ".coords"
         Main.execute(workline, "Generating coordinate locations, please wait")
+        workline = "show-snps -r " + self.contigs + ".delta > " + self.contigs + ".snps"
+        Main.execute(workline, "Generation snp information, please wait")
         return

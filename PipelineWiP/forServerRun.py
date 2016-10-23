@@ -16,6 +16,85 @@ from Blast import Blast
 import copy
 import NUCmer
 
+
+def MapperPreRun():
+    if len(worker.fastQFileList) > 2:
+        fastQPairs = len(worker.fastQFileList) - 1
+        i = 0
+        while i < fastQPairs:
+            mapper = ReadAligner.Bowtie2(worker.fastQFileList[i], worker.fastQFileList[i + 1],
+                                         worker.refGenomeList[0], options.output_filepath)
+            worker.mapperClass.append(mapper)
+            mapper.start()
+            i += 2
+    else:
+        mapper = ReadAligner.Bowtie2(worker.fastQFileList[0], worker.fastQFileList[1],
+                                     worker.refGenomeList[0], options.output_filepath)
+        worker.mapperClass.append(mapper)
+        mapper.start()
+    for mapper in worker.mapperClass:
+        mapper.join()
+    for mapper in worker.mapperClass:
+        bamWorker = ReadAligner.BamTools(mapper.samFile, mapper.referenceDB)
+        bamWorker.start()
+        worker.bamClass.append(bamWorker)
+
+    for bamWorker in worker.bamClass:
+        bamWorker.join()
+
+    for bamWorker in worker.bamClass:
+        visualisationTool = VisualisationTools(bamWorker.samFile)
+        visualisationTool.start()
+        worker.visualisationClass.append(visualisationTool)
+
+    for visualisationTool in worker.visualisationClass:
+        visualisationTool.join()
+
+    mapperPrimer = PrimerDesign.PrimerDesignByMapping()
+    for visualisationTool in worker.visualisationClass:
+        mapperPrimer.generateCoords(visualisationTool.depthPerPos)
+    return PrimerDesign.PrimerDesign.runIntersect(mapperPrimer.coordsFile, "/MapperPoI.gff")
+
+def DeNovoPreRun():
+    if len(worker.fastQFileList) > 2:
+        fastQPairs = len(worker.fastQFileList) - 1
+        i = 0
+        while i < fastQPairs:
+            assembler = Assemblers.Spades(worker.fastQFileList[i], worker.fastQFileList[i + 1], options.output_filepath)
+            worker.assemblerClass.append(assembler)
+            assembler.start()
+            i += 2
+    else:
+        assembler = Assemblers.Spades(worker.fastQFileList[0], worker.fastQFileList[1], options.output_filepath)
+        worker.assemblerClass.append(assembler)
+        assembler.start()
+    contigs = ""
+    for assembler in worker.assemblerClass:
+        assembler.join()
+        contigs += assembler.outputDir + " "
+    thread = threading.Thread(Assemblers.Assemblers.quast(contigs))
+    thread.start()
+    Main.Main.threadList.append(thread)
+    contigs = contigs.split(" ")
+    nucmerList = list()
+    for contig in contigs:
+        if len(contig) > 0:
+            nucmerRun = NUCmer.NUCmerRun(contig)
+            nucmerRun.start()
+            nucmerList.append(nucmerRun)
+    for nucmerRun in nucmerList:
+        nucmerRun.join()
+    denovoPrimer = PrimerDesign.PrimerDesignByDenovo()
+    for contig in contigs:
+        print contig
+        if len(contig) > 0:
+            denovoPrimer.readCoords(contig)
+    return PrimerDesign.PrimerDesign.runIntersect(denovoPrimer.coordsFile, "/denovoPoI.gff")
+
+def intersect():
+
+    return
+
 fastQFileList = []
 refGenomeList = []
 
@@ -68,88 +147,34 @@ parser.add_option('-G', '--GFFFile',
 
 options, args = parser.parse_args()
 
-worker = Main.Main()
+
 Main.Main.makeDirectory(options.output_filepath)
 Main.Main.makeDirectory(options.result_filepath)
-worker.openRefGenomes(options.refGenome)
-worker.openFastQFiles(options.fastQFile)
 Main.Main.gffFile = options.gffFile
 Main.Main.workDir = options.output_filepath
 Main.Main.resultDir = options.result_filepath
+Main.Main.threadList = list()
+worker = Main.Main()
+worker.openRefGenomes(options.refGenome)
+worker.openFastQFiles(options.fastQFile)
 threadList = list()
 for fastQFile in worker.fastQFileList:
     workLine = "fastqc " + Main.Main.fastQAdd + fastQFile + " -o " + Main.Main.resultDir + " -q --noextract"
     thread = threading.Thread(Main.Main.execute(workLine, "Generating fastQC reports in the background"))
     thread.start()
-    threadList.append(thread)
-if len(worker.fastQFileList) > 2:
-    fastQPairs = len(worker.fastQFileList) - 1
-    i = 0
-    while i < fastQPairs:
-        assembler = Assemblers.Spades(worker.fastQFileList[i], worker.fastQFileList[i + 1], options.output_filepath)
-        mapper = ReadAligner.Bowtie2(worker.fastQFileList[i], worker.fastQFileList[i+1],
-                                     worker.refGenomeList[0], options.output_filepath)
-        worker.mapperClass.append(mapper)
-        worker.assemblerClass.append(assembler)
-        mapper.start()
-        assembler.start()
-        i += 2
-else:
-    assembler = Assemblers.Spades(worker.fastQFileList[0], worker.fastQFileList[1], options.output_filepath)
-    mapper = ReadAligner.Bowtie2(worker.fastQFileList[0], worker.fastQFileList[1],
-                                 worker.refGenomeList[0], options.output_filepath)
-    worker.mapperClass.append(mapper)
-    worker.assemblerClass.append(assembler)
-    mapper.start()
-    assembler.start()
-for mapper in worker.mapperClass:
-    mapper.join()
-contigs = ""
-for assembler in worker.assemblerClass:
-    assembler.join()
-    contigs += assembler.outputDir + " "
-thread = threading.Thread(Assemblers.Assemblers.quast(contigs))
-thread.start()
-threadList.append(thread)
-for mapper in worker.mapperClass:
-    bamWorker = ReadAligner.BamTools(mapper.samFile, mapper.referenceDB)
-    bamWorker.start()
-    worker.bamClass.append(bamWorker)
+    Main.Main.threadList.append(thread)
 
-for bamWorker in worker.bamClass:
-    bamWorker.join()
-
-for bamWorker in worker.bamClass:
-    visualisationTool = VisualisationTools(bamWorker.samFile)
-    visualisationTool.start()
-    worker.visualisationClass.append(visualisationTool)
-
-for visualisationTool in worker.visualisationClass:
-    visualisationTool.join()
-
-mapperPrimer = PrimerDesign.PrimerDesignByMapping()
-for visualisationTool in worker.visualisationClass:
-    mapperPrimer.generateCoords(visualisationTool.depthPerPos)
+preRun = list()
 methodList = list()
-methodList.append(PrimerDesign.PrimerDesign.runIntersect(mapperPrimer.coordsFile, "/MapperPoI.gff"))
+thread = threading.Thread(methodList.append(MapperPreRun()))
+thread.start()
+preRun.append(thread)
+thread = threading.Thread(methodList.append(DeNovoPreRun()))
+thread.start()
+preRun.append(thread)
+for thread in preRun:
+    thread.join()
 
-# # # contigs = "workDir/Y006W_S7_L001_R1_001P100/Y006W_S7_L001_R1_001P100.fa  workDir/Q108_S9_L001_R1_001P100/Q108_S9_L001_R1_001P100.fa workDir/AD84_S8_L001_R1_001P100/AD84_S8_L001_R1_001P100.fa "
-contigs = contigs.split(" ")
-nucmerList = list()
-for contig in contigs:
-    if len(contig) > 0:
-        nucmerRun = NUCmer.NUCmerRun(contig)
-        nucmerRun.start()
-        nucmerList.append(nucmerRun)
-for nucmerRun in nucmerList:
-    nucmerRun.join()
-denovoPrimer = PrimerDesign.PrimerDesignByDenovo()
-for contig in contigs:
-    print contig
-    if len(contig) > 0:
-        denovoPrimer.readCoords(contig)
-
-methodList.append(PrimerDesign.PrimerDesign.runIntersect(denovoPrimer.coordsFile, "/denovoPoI.gff"))
 methodList.append(PrimerDesign.PrimerDesign.runMethodIntersect(methodList, Main.Main.workDir+"/Intersect.gff"))
 PrimerDesign.PrimerDesign.removeDuplicate(methodList[2])
 methodList.append(PrimerDesign.PrimerDesign.runMethodSubstract([methodList[0], methodList[2]], Main.Main.workDir +
@@ -180,7 +205,7 @@ for k, blastItem in enumerate(blastList):
     thread = threading.Thread(PrimerDesign.PrimerDesign.generatePrimer3Input(
         item+"primSets", PrimerDesign.PrimerDesign.readGFF(item+"unique.gff", genome)))
     thread.start()
-    threadList.append(thread)
+    Main.Main.threadList.append(thread)
 
-for thread in threadList:
+for thread in Main.Main.threadList:
     thread.join()
