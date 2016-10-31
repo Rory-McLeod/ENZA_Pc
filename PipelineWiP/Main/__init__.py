@@ -37,7 +37,7 @@ class Main:
         - Might have to remove this... don't see the use of this
         """
         hdlr = logging.FileHandler(Main.workDir + '/logging.log')
-        formatter = logging.Formatter('%(asctime)s : %(threadName)s - %(levelname)s %(message)s')
+        formatter = logging.Formatter('%(asctime)s : %(threadName)s - %(levelname)s %(message)s \n')
         hdlr.setFormatter(formatter)
         Main.logger.addHandler(hdlr)
         Main.logger.setLevel(logging.DEBUG)
@@ -176,7 +176,7 @@ class Main:
     def execute(cmd, worktext="working, please wait"):
         Main.logger.debug("Running command: " + cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        Main.printer(worktext)
+        Main.logger.info(worktext)
         jobNr, stderr = p.communicate()
         if p.returncode == 0:
             Main.logger.info("Completed command: " + cmd)

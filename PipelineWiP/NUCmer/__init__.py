@@ -73,4 +73,6 @@ class NUCmerRun(threading.Thread):
         Main.execute(workline, "Generating coordinate locations, please wait")
         workline = "show-snps -r " + self.contigs + ".delta > " + self.contigs + ".snps"
         Main.execute(workline, "Generation snp information, please wait")
+        workline = "mapview -f pdf -p " + self.contigs + " " + self.contigs + ".coords"
+        Main.execute(workline, "Generating coordinate locations, please wait")
         return

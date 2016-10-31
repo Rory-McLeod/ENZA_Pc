@@ -73,7 +73,7 @@ class PrimerDesign:
 
     @staticmethod
     def readGFF(gffFile, genome):
-        Main.logger.debug("readGFF: gff." + gffFile + " g." + genome)
+        Main.logger.debug("readGFF: gff." + gffFile + " g." + str(len(genome)))
         POI = dict()
         gffFile = open(gffFile, mode='r')
         for line in gffFile:
@@ -93,7 +93,7 @@ class PrimerDesign:
 
     @staticmethod
     def saveFasta(outputFile, POI):
-        Main.logger.debug("saveFasta: o." + outputFile + " p." + POI)
+        Main.logger.debug("saveFasta: o." + outputFile + " p." + str(len(POI)))
         outputFile = open(outputFile, mode="w")
         for key, value in POI.iteritems():
             outputFile.write(">" + str(key) + "\n" + value + "\n")
@@ -101,7 +101,7 @@ class PrimerDesign:
 
     @staticmethod
     def generatePrimer3Input(outputFile, POI):
-        Main.logger.debug("generatePrimer3Input: o." + outputFile + " p." +POI)
+        Main.logger.debug("generatePrimer3Input: o." + outputFile + " p." + str(len(POI)))
         """
         Transfers the POI to a boulder IO file, used by primer3
         Args:
@@ -138,7 +138,7 @@ class PrimerDesign:
 
     @staticmethod
     def runIntersect(coordsFile, outputName):
-        Main.logger.debug("runIntersect: c." + coordsFile + " o." + outputName)
+        Main.logger.debug("runIntersect: c." + str(len(coordsFile)) + " o." + outputName)
         numb = len(coordsFile)
         while len(coordsFile) > 1:
             coordsFileList = list()
@@ -166,14 +166,14 @@ class PrimerDesign:
 
     @staticmethod
     def runMethodIntersect(coordsFile, outputName):
-        Main.logger.debug("runMethodIntersect: c." + coordsFile + " o." + outputName)
+        Main.logger.debug("runMethodIntersect: c." + str(len(coordsFile)) + " o." + outputName)
         workLine = "intersectBed -a " + coordsFile[0] + " -b " + coordsFile[1] + " > " + outputName
         Main.execute(workLine, "Running method intersect, please wait")
         return outputName
 
     @staticmethod
     def runMethodSubstract(coordsFile, outputName):
-        Main.logger.debug("runMethodSubstract: c." + coordsFile + " o." + outputName)
+        Main.logger.debug("runMethodSubstract: c." + str(len(coordsFile)) + " o." + outputName)
         workLine = "subtractBed -a " + coordsFile[0] + " -b " + coordsFile[1] + " > " + outputName
         Main.execute(workLine, "Running substraction, please wait")
         return outputName
@@ -248,8 +248,8 @@ class PrimerDesignByMapping:
         return
 
     def generateCoords(self, depthPerPos, depthLimit=12, counterLimit=28):
-        Main.logger.debug("PrimerDesignByMapping generateCoords: df." + depthPerPos +
-                          " d." + depthLimit + " c." + counterLimit)
+        Main.logger.debug("PrimerDesignByMapping generateCoords: df." + str(len(depthPerPos)) +
+                          " d." + str(depthLimit) + " c." + str(counterLimit))
         coordsHits = dict()
         allscaffold = list(depthPerPos.keys())
         for scaffold in allscaffold:

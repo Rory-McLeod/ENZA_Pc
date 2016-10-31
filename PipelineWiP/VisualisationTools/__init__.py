@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-#.. todo:: test this shit out!
 
 from __future__ import division
 import threading
 from Main import Main
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 class VisualisationTools(threading.Thread):
     """
@@ -140,3 +143,40 @@ class Mapping:
         for hitItem in self.hitList:
             returnList.append(hitItem[startEnd])
         return returnList
+
+
+class scaffoldClass:
+    colorList = list()
+    isolates = list()
+    ylabel = ""
+    xlabel = ""
+
+    def __init__(self, scaffold):
+        self.scaffold = scaffold
+        self.hitDict = dict()
+        return
+
+    def hit(self, isolat, start, end):
+        if isolat not in self.hitDict:
+            self.hitDict[isolat] = list()
+        self.hitDict[isolat].append([start, end])
+        return
+
+    def makePlot(self, number):
+        Main.logger.debug(self.scaffold)
+        plt.ioff()
+        plt.figure(number)
+        for isolat, value in iter(self.hitDict.items()):
+            i = scaffoldClass.isolats.index(isolat)
+            for startEnd in value:
+                line = plt.plot([startEnd[0], startEnd[1]], [i + 1, i + 1])
+                plt.setp(line, color=scaffoldClass.colorList[i])
+        plt.ylim(0, len(scaffoldClass.isolates)+1)
+        plt.ylabel(scaffoldClass.ylabel)
+        plt.xlabel(scaffoldClass.xlabel)
+        plt.grid(False)
+        plt.title(str(self.scaffold))
+        place = Main.resultDir + "/" + str(self.scaffold) + ".svg"
+        plt.savefig(place, format='svg', dpi=1200)
+        plt.clf()
+        return

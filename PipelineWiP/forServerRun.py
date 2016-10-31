@@ -86,7 +86,6 @@ def DeNovoPreRun():
         nucmerRun.join()
     denovoPrimer = PrimerDesign.PrimerDesignByDenovo()
     for contig in contigs:
-        print contig
         if len(contig) > 0:
             denovoPrimer.readCoords(contig)
     return PrimerDesign.PrimerDesign.runIntersect(denovoPrimer.coordsFile, "/denovoPoI.gff")
@@ -192,7 +191,6 @@ otherGenomes = copy.copy(Main.Main.refGenomeList)
 del otherGenomes[0]
 blastThread = list()
 for blastItem in blastList:
-    print blastItem
     blastResult = Blast(blastItem, otherGenomes)
     blastResult.start()
     blastThread.append(blastResult)

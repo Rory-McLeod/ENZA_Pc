@@ -8,7 +8,7 @@ class Blast(threading.Thread):
     y = 0
 
     def __init__(self, query, genomeList):
-        Main.logger.debug("Blast: q." + query + " g." + genomeList)
+        Main.logger.debug("Blast: q." + query + " g." + str(len(genomeList)))
         Blast.y += 1
         self.y = copy.deepcopy(Blast.y)
         threading.Thread.__init__(self)
