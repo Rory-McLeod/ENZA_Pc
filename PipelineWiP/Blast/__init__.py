@@ -18,25 +18,21 @@ class Blast(threading.Thread):
 
     def run(self):
         Main.logger.debug("Blast run:")
-        allAlias = ""
-        for genome in self.genomeList:
-            self.makeDatabase(str(genome), Main.workDir)
-            allAlias += Main.workDir + "/" + genome + " "
-        allAlias = allAlias.rstrip()
-        self.aliasTool(allAlias, Main.workDir)
         self.doBlast(Main.workDir)
         self.interpertBlast(Main.workDir)
         self.removeHits()
         return
 
-    def makeDatabase(self, genomeFile, outputDir):
+    @staticmethod
+    def makeDatabase(genomeFile, outputDir):
         Main.logger.debug("Blast makeDatabase: g." + genomeFile + " o." + outputDir)
         workline = "makeblastdb -in " + Main.genomeAdd + genomeFile + " -parse_seqids -dbtype nucl -out " + outputDir +\
                    "/" + genomeFile
         Main.execute(workline)
         return
 
-    def aliasTool(self, allAlias, outputDir=Main.workDir):
+    @staticmethod
+    def aliasTool(allAlias, outputDir=Main.workDir):
         Main.logger.debug("Blast aliasTool: a." + allAlias + " o." + outputDir)
         output = outputDir+"/others"
         workline = "blastdb_aliastool -dblist \"" + allAlias + "\" -dbtype nucl -out " + output + " -title others"

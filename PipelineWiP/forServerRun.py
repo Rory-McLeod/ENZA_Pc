@@ -190,6 +190,12 @@ for PipMethod in methodList:
 otherGenomes = copy.copy(Main.Main.refGenomeList)
 del otherGenomes[0]
 blastThread = list()
+allAlias = ""
+for genome in otherGenomes:
+   Blast.makeDatabase(str(genome), Main.Main.workDir)
+   allAlias += Main.Main.workDir + "/" + genome + " "
+allAlias = allAlias.rstrip()
+Blast.aliasTool(allAlias, Main.Main.workDir)
 for blastItem in blastList:
     blastResult = Blast(blastItem, otherGenomes)
     blastResult.start()
@@ -198,6 +204,7 @@ for blastItem in blastList:
 for blastItem in blastThread:
     blastItem.join()
 
+genome = PrimerDesign.PrimerDesign.readRefGenome(Main.Main.genomeAdd + Main.Main.refGenomeList[0])
 for k, blastItem in enumerate(blastList):
     item = blastItem.rstrip()[:-2]
     thread = threading.Thread(PrimerDesign.PrimerDesign.generatePrimer3Input(
