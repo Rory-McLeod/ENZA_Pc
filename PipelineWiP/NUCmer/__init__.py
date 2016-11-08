@@ -65,14 +65,23 @@ class NUCmerRun(threading.Thread):
         return
 
     def run(self):
+        """
+        Todo:
+        - mapview is currently not working due to redirection of the output issues. WIP
+        :return:
+        """
         Main.logger.debug("NucmerRun run:")
         workline = "nucmer -maxmatch -p " + self.contigs + " " + \
                    Main.genomeAdd + Main.refGenomeList[0] + " " + self.contigs
         Main.execute(workline, "Running NUCmer, please wait")
         workline = "show-coords -l " + self.contigs + ".delta > " + self.contigs + ".coords"
         Main.execute(workline, "Generating coordinate locations, please wait")
-        workline = "show-snps -r " + self.contigs + ".delta > " + self.contigs + ".snps"
-        Main.execute(workline, "Generation snp information, please wait")
-        workline = "mapview -f pdf -p " + self.contigs + " " + self.contigs + ".coords"
+        workline = "delta-filter -r -q " + self.contigs + ".delta > " + self.contigs + ".filter"
         Main.execute(workline, "Generating coordinate locations, please wait")
+        workline = "show-snps -r -I -T -H " + self.contigs + ".filter > " + self.contigs + ".snps"
+        Main.execute(workline, "Generation snp information, please wait")
+        workline = "show-coords -r -c -l " + self.contigs + ".delta > " + self.contigs + ".Mapcoords"
+        Main.execute(workline, "Generating coordinate locations, please wait")
+        workline = "mapview -f pdf -p " + self.contigs + " " + self.contigs + ".Mapcoords"
+        Main.execute(workline, "Generating mapview in pdf, please wait")
         return

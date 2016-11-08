@@ -1,8 +1,19 @@
 #!/usr/bin/env python
-
+"""
+Created on: 29-08-2016
+latest update: 01-11-2016
+@author: H.J.C. Cornelisse
+Module is used to run all parts used for the blasting against other spp
+Dependencies:
+- Blast 2.2.28+ (tested)
+Todo:
+- tests
+- add comments
+"""
 import threading
 from Main import Main
 import copy
+
 
 class Blast(threading.Thread):
     y = 0
