@@ -101,7 +101,7 @@ class Bowtie2(ReadAligner):
                    " -1 " + Main.fastQAdd + self.fastQFile1 + \
                    " -2 " + Main.fastQAdd + self.fastQFile2 + \
                    " -q -S " + samFile
-        Main.execute(workLine)
+        Main.execute(workLine, "Running Bowtie2, please wait")
         self.samFile = samFile.replace(".sam", "")
         return
 

@@ -183,5 +183,7 @@ class Main:
         else:
             Main.logger.error("Error running command: " + cmd)
             Main.logger.error(stderr)
+        if worktext == "Running Bowtie2, please wait":
+            Main.logger.info("Bowtie2 result: " + stderr)
         return
 
