@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Todo:
-- remove execute from classes and pass to Main class
+- add cmd to reference genome('s)
 - add check for GFF file
 """
 

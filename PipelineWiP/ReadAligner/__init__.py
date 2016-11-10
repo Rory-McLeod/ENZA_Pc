@@ -100,7 +100,8 @@ class Bowtie2(ReadAligner):
         workLine = "bowtie2 -x " + outputDir + self.referenceDB + \
                    " -1 " + Main.fastQAdd + self.fastQFile1 + \
                    " -2 " + Main.fastQAdd + self.fastQFile2 + \
-                   " -q -S " + samFile
+                   " -a --score-min \"L,-0.06,-0.06\" --phred33 " \
+                   "--fr --very-sensitive --un-conc-gz " + fastQName + ".unalign.gz -S " + samFile
         Main.execute(workLine, "Running Bowtie2, please wait")
         self.samFile = samFile.replace(".sam", "")
         return
