@@ -205,7 +205,7 @@ class PrimerDesignByDenovo:
         Main.logger.debug("PrimerDesignByDenovo:")
         self.y = 0
         self.coordsFile = list()
-        #self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
+        self.coordsFile.append(PrimerDesign.readGenes("D" + str(self.y), Main.gffFile))
         self.geneInfo = dict()
         self.hitList = dict()
         self.y += 1
@@ -243,7 +243,7 @@ class PrimerDesignByMapping:
         self.HitList = dict()
         self.coordsFile = list()
         self.y = 0
-        #self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
+        self.coordsFile.append(PrimerDesign.readGenes("M"+str(self.y), Main.gffFile))
         self.y += 1
         return
 
