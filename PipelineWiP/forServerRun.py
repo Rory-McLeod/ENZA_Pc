@@ -149,7 +149,10 @@ options, args = parser.parse_args()
 
 Main.Main.makeDirectory(options.output_filepath)
 Main.Main.makeDirectory(options.result_filepath)
-Main.Main.gffFile = options.gffFile
+if options.gffFile:
+    Main.Main.gffFile = options.gffFile
+else:
+    Main.Main.gffFile = None
 Main.Main.workDir = options.output_filepath
 Main.Main.resultDir = options.result_filepath
 Main.Main.threadList = list()

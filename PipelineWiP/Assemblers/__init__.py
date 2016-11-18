@@ -38,9 +38,13 @@ class Assemblers(threading.Thread):
         :return:
         """
         Main.logger.debug("Quast: "+contigs)
-        geneFile = Assemblers.gffChanger(Main.gffFile)
+        if Main.gffFile is not None:
+            geneFile = Assemblers.gffChanger(Main.gffFile)
+            geneCommand = " -G " + geneFile + " "
+        else:
+            geneCommand = " "
         workline = "/mnt/apps/quast/quast-2.3/quast.py -o " + Main.resultDir + " -R " + Main.genomeAdd +\
-                   Main.refGenomeList[0] + " -G " + geneFile + " " + contigs
+                   Main.refGenomeList[0] + geneCommand + contigs
         Main.execute(workline, "Running quast, please wait!")
         return
 
