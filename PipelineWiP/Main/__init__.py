@@ -3,8 +3,8 @@
 Created on: 29-08-2016
 @author: H.J.C. Cornelisse
 Class is used to do main functions like checking the inputs and creating directories
-Todo:
-- add excecute for common use
+Dependencies:
+- none
 """
 import os.path
 import gzip
@@ -15,6 +15,9 @@ from os import listdir
 import logging
 
 class Main:
+    """
+    Main class takes care of some startup settings and basic functions like execution on command line
+    """
     fastQFileList = []
     refGenomeList = []
     mapperClass = []
@@ -33,8 +36,7 @@ class Main:
 
     def __init__(self):
         """
-        Todo:
-        - Might have to remove this... don't see the use of this
+        Setting up of the logging file
         """
         hdlr = logging.FileHandler(Main.workDir + '/logging.log')
         formatter = logging.Formatter('%(asctime)s : %(threadName)s - %(levelname)s %(message)s \n')
@@ -47,13 +49,8 @@ class Main:
         """
         Reads the list of fastQ files, and check if the input is correct. if needed, it unzips it.
         If good, saved to self.fastQFileList (accessible from all modules)
-        Args:
-            fastQlist: input list from user containing all fastQ files
-
-        Returns:
-            None: returns to the place of calling
-        Todo:
-        - Check if file exist in current directory
+        :param fastQlist: input list from user containing all fastQ files
+        :return: returns to the place of calling
         """
         # divide files to seperate fastQ files
         Main.logger.debug("Checking fastQ files, please wait")
@@ -95,11 +92,8 @@ class Main:
         """
         Reads the list of genome files, and check if the input is correct. if needed, it unzips it.
         If good, saved to self.refGenomeList (accessible from all modules)
-        Args:
-            refGenomeFileList: input list from user containing all genome files
-
-        Returns:
-            None: returns to the place of calling
+        :param refGenomeFileList: input list from user containing all genome files
+        :return: returns to the place of calling
         """
         # select the reference genomes
         Main.logger.debug("Checking genome files, please wait")
@@ -142,11 +136,8 @@ class Main:
     def makeDirectory(directoryName):
         """
         Makes the temporary folders for workfiles and resultfiles.
-        Args:
-            directoryName: name of the directory that needs to be created
-
-        Returns:
-            None: returns to the place of calling
+        :param directoryName: name of the directory that needs to be created
+        :return: returns to the place of calling
         """
         Main.logger.debug("Creating directory, please wait")
         if not os.path.exists(directoryName):
@@ -159,21 +150,13 @@ class Main:
         return
 
     @staticmethod
-    def printer(line):
-        """
-        Ooh you gotta love the timestamps on your output!
-        Args:
-            line: line to be printed
-
-        Returns:
-            None: returns to the place of calling
-        """
-        timeSpot = strftime("%Y-%m-%d %H:%M:%S")
-        print "[" + timeSpot + "]" + line
-        return
-
-    @staticmethod
     def execute(cmd, worktext="working, please wait"):
+        """
+        Function that execute to the command line
+        :param cmd: command that will be run
+        :param worktext: text for info log
+        :return:
+        """
         Main.logger.debug("Running command: " + cmd)
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         Main.logger.info(worktext)
