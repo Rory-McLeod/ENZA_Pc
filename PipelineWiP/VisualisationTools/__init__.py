@@ -1,5 +1,11 @@
 #!/usr/bin/env python
-
+"""
+Created on: 29-08-2016
+@author: H.J.C. Cornelisse
+Class is used to analyse the mapped reads.
+Dependencies:
+- matplotlib (not tested)
+"""
 from __future__ import division
 import threading
 from Main import Main
@@ -10,8 +16,7 @@ import matplotlib.pyplot as plt
 
 class VisualisationTools(threading.Thread):
     """
-    Currently, this module is not yet implemented in the whole system due to testing
-    Used to generate plots and statistics regarding the outcomes of the other modules
+    class that shows the different coverage rates according to the results of the read alignment
     """
 
     inputDir = ""
@@ -22,24 +27,23 @@ class VisualisationTools(threading.Thread):
     totalSize = 0
 
     def __init__(self, inputDir):
-        Main.logger.debug("VisualisationTools: i." + inputDir)
         """
         Method for initiating the visualisation tool.
         threading.Thread is called for threaded use of this class
         :param inputDir: the location of the output of divers systems (default: workDir)
-        :param outputDir: the location to save the output of these methods to (default: resultDir)
         """
+        Main.logger.debug("VisualisationTools: i." + inputDir)
         threading.Thread.__init__(self)
         self.inputDir = inputDir
         return
 
     def run(self):
-        Main.logger.debug("VisualisationTools run:")
         """
         Method called upon by start(), specific for threated runs.
         Please call upon this after finishing the mapping and transfer in ReadAligner
-        :returns: None (Null): returns to the place of calling
+        :return:
         """
+        Main.logger.debug("VisualisationTools run:")
         self.readBedToLocal()
         self.readCovBedtoLocal()
         oneDepth = self.getCoveragePercentage()
@@ -56,12 +60,12 @@ class VisualisationTools(threading.Thread):
         return
 
     def readBedToLocal(self):
-        Main.logger.debug("VisualisationTools readBedToLocal:")
         """
         Reads the BED file into the memory for fast access.
         The BED file here is a BED file giving read depth per position
-        Returns:
+        :return:
         """
+        Main.logger.debug("VisualisationTools readBedToLocal:")
         bedFile = file(self.inputDir+".bed", mode='r')
         bedList = {}
         scaffoldList = []
@@ -81,12 +85,11 @@ class VisualisationTools(threading.Thread):
         return
 
     def readCovBedtoLocal(self):
-        Main.logger.debug("VisualisationTools readCovBedtoLocal:")
         """
         Reads the occurance of a read depth over the whole genome.
-        Returns:
-        None (Null): returns to the place of calling
+        :return:
         """
+        Main.logger.debug("VisualisationTools readCovBedtoLocal:")
         covFile = file(self.inputDir + ".CovBed", mode='r')
         self.depthOccurance = {}
         for line in covFile:
@@ -100,14 +103,12 @@ class VisualisationTools(threading.Thread):
         return
 
     def getCoveragePercentage(self, depth=1):
-        Main.logger.debug("VisualisationTools getCoveragePercentage: d." + str(depth))
         """
         Returns the percentage of coverage over the whole genome by an set read depth
-        Input:
-        depth (int): depth that you want to get the coverage rate from
-        Returns:
-        percentageMore (float): the percentage of coverage at the given depth
+        :param depth: depth that you want to get the coverage rate from
+        :return: percentageMore (float): the percentage of coverage at the given depth
         """
+        Main.logger.debug("VisualisationTools getCoveragePercentage: d." + str(depth))
         lessVal = 0
         for key, value in self.depthOccurance.iteritems():
             key = int(key)
@@ -118,8 +119,15 @@ class VisualisationTools(threading.Thread):
         return percentageMore
 
 class Mapping:
+    """
+    Saving information to work with the primer design in combination with the direct mapping
+    """
 
     def __init__(self, scaffold):
+        """
+        start with scaffold
+        :param scaffold:
+        """
         Main.logger.debug("Mapping: s." + scaffold)
         self.hitList = list()
         self.starts = list()
@@ -129,6 +137,13 @@ class Mapping:
         return
 
     def hit(self, start, end, ContigID):
+        """
+        Information that saved the start, end and the origin of the coverage
+        :param start: start position on the scaffold
+        :param end: end position on the scaffold
+        :param ContigID: name of the contig
+        :return:
+        """
         Main.logger.debug("Mapping hit: s." + str(start) + " e." + str(end) + " c." + str(ContigID))
         hitItem = [start, end, ContigID]
         self.startEnd.append([start, end])
@@ -138,6 +153,11 @@ class Mapping:
         return
 
     def getStartEnds(self, startEnd=0):
+        """
+        returns a list of all the starts or ends of the scaffold
+        :param startEnd: 0 for starts, 1 for ends
+        :return: list of all the starts or ends in the scaffold
+        """
         Main.logger.debug("Mapping getStartEnds: s." + str(startEnd))
         returnList = list()
         for hitItem in self.hitList:
@@ -146,6 +166,9 @@ class Mapping:
 
 
 class scaffoldClass:
+    """
+    Not yet in use
+    """
     colorList = list()
     isolates = list()
     ylabel = ""
