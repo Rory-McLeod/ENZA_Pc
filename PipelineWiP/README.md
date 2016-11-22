@@ -18,7 +18,7 @@ dependencies and version numbers
 The to-do list contains all the parts that could be changed to increase the functionality or usability of OED'S.
 
 * Start program with ready-made contigs instead of making the contigs in the pipeline. 
-..* Is this working?
+ * Is this working?
 
 ## How-to
 
