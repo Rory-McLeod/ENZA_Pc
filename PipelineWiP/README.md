@@ -1,5 +1,6 @@
-OED'S, Omics-Enabled Detection and Studies primer design pipeline
-=================================================================
+#OED'S
+###Omics-Enabled Detection and Studies primer design pipeline
+
 A pipeline combining tools like bowtie2, SPAdes, Primer3 and blast for designing species specific primers
 
 ## Overview
@@ -14,7 +15,9 @@ dependencies and version numbers
 
 ## To-do
 
-todo list
+The to-do list contains all the parts that could be changed to increase the functionality or usability of OED'S.
+* Start program with ready-made contigs instead of making the contigs in the pipeline.
+..* Is this working?
 
 ## How-to
 
