@@ -11,20 +11,24 @@ The tool combines two approaches to discover conserved regions by combining the 
 
 ## Dependencies
 
-dependencies and version numbers
+The tool uses the following tools, and is tested with the menioned versions
 
 ## To-do
 
 The to-do list contains all the parts that could be changed to increase the functionality or usability of OED'S.
 
 * Start program with ready-made contigs instead of making the contigs in the pipeline. 
- * Is this working?
+ * This will lower the total runtime of the program and the user can have direct influence on the quality of the contigs
+* Test program to run with single-read sequence data
+* Add config script for dependencies positions and other usability settings
 
 ## How-to
 
 how to use the tool
 
-## Output explained
+### Input explained
+
+### Output explained
 
 explanation of the outputs
 
